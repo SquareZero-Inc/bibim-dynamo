@@ -1,0 +1,4 @@
+<ViewExtensionDefinition>
+  <AssemblyPath>{ASSEMBLY_PATH}</AssemblyPath>
+  <TypeName>BIBIM_MVP.BIBIM_Extension</TypeName>
+</ViewExtensionDefinition>

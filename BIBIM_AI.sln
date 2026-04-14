@@ -1,0 +1,30 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BIBIM_MVP", "BIBIM_MVP.csproj", "{8BE890BB-DD15-80D7-CEE2-46E63B863713}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BIBIM_MVP.Tests", "BIBIM_MVP.Tests\BIBIM_MVP.Tests.csproj", "{1971A6C3-BCEE-05AA-CD78-7D7AF81F0CFD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8BE890BB-DD15-80D7-CEE2-46E63B863713}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8BE890BB-DD15-80D7-CEE2-46E63B863713}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8BE890BB-DD15-80D7-CEE2-46E63B863713}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8BE890BB-DD15-80D7-CEE2-46E63B863713}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1971A6C3-BCEE-05AA-CD78-7D7AF81F0CFD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1971A6C3-BCEE-05AA-CD78-7D7AF81F0CFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1971A6C3-BCEE-05AA-CD78-7D7AF81F0CFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1971A6C3-BCEE-05AA-CD78-7D7AF81F0CFD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {13FF016C-1D28-4422-BE7A-9874B32CB7AA}
+	EndGlobalSection
+EndGlobal

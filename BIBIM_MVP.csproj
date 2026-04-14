@@ -1,0 +1,287 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Common properties -->
+  <PropertyGroup>
+    <UseWPF>true</UseWPF>
+    <!-- Enable Windows Forms for NotifyIcon (system tray notifications) -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <!-- Enable assembly version generation from Directory.Build.props -->
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
+    <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+    <GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <Configurations>Debug;R2027_D402;R2026_D361;R2026_D360;R2026_D350;R2026_D341;R2025_D330;R2025_D321;R2025_D303;R2024_D293;R2024_D281;R2024_D270;R2023_D261;R2023_D230;R2022_D220</Configurations>
+    <!-- Version is inherited from Directory.Build.props -->
+    <Authors>BIBIM AI</Authors>
+    <AppLanguage Condition="'$(AppLanguage)' == ''">kr</AppLanguage>
+    <OutputRoot>bin\$(AppLanguage)\</OutputRoot>
+  </PropertyGroup>
+
+  <!-- Release builds: strip PDB symbols so they are not bundled in the installer -->
+  <PropertyGroup Condition="'$(Configuration)' != 'Debug'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(AppLanguage)' == 'en'">
+    <DefineConstants>$(DefineConstants);APP_LANG_EN</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(AppLanguage)' != 'en'">
+    <DefineConstants>$(DefineConstants);APP_LANG_KR</DefineConstants>
+  </PropertyGroup>
+
+  <!-- ========================================== -->
+  <!-- CONFIGURATIONS & FRAMEWORKS                -->
+  <!-- ========================================== -->
+
+  <!-- Revit 2027 Builds (.NET 10, Dynamo 4.x) -->
+  <!-- NuGet has no stable 4.0.x — 4.0.2 resolves to 4.1.0.x (first stable 4.x release) -->
+  <!-- Requires .NET 10 SDK: https://dotnet.microsoft.com/download/dotnet/10.0 -->
+  <PropertyGroup Condition="'$(Configuration)' == 'R2027_D402'">
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <RevitVersion>2027</RevitVersion>
+    <OutputPath>$(OutputRoot)R2027_D402\</OutputPath>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <DynamoVersion>4.0.2</DynamoVersion>
+  </PropertyGroup>
+
+  <!-- Revit 2026 Builds (4 configs) -->
+  <PropertyGroup Condition="'$(Configuration)' == 'R2026_D361'">
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RevitVersion>2026</RevitVersion>
+    <OutputPath>$(OutputRoot)R2026_D361\</OutputPath>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <DynamoVersion>3.6.1</DynamoVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'R2026_D360'">
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RevitVersion>2026</RevitVersion>
+    <OutputPath>$(OutputRoot)R2026_D360\</OutputPath>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <DynamoVersion>3.6.0</DynamoVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'R2026_D350'">
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RevitVersion>2026</RevitVersion>
+    <OutputPath>$(OutputRoot)R2026_D350\</OutputPath>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <DynamoVersion>3.5.0</DynamoVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'R2026_D341'">
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RevitVersion>2026</RevitVersion>
+    <OutputPath>$(OutputRoot)R2026_D341\</OutputPath>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <DynamoVersion>3.4.1</DynamoVersion>
+  </PropertyGroup>
+
+  <!-- Revit 2025 Builds (3 configs + Debug) -->
+  <PropertyGroup Condition="'$(Configuration)' == 'R2025_D330' Or '$(Configuration)' == 'Debug'">
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RevitVersion>2025</RevitVersion>
+    <OutputPath>$(OutputRoot)R2025_D330\</OutputPath>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <DynamoVersion>3.3.0</DynamoVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'R2025_D321'">
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RevitVersion>2025</RevitVersion>
+    <OutputPath>$(OutputRoot)R2025_D321\</OutputPath>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <DynamoVersion>3.2.1</DynamoVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'R2025_D303'">
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RevitVersion>2025</RevitVersion>
+    <OutputPath>$(OutputRoot)R2025_D303\</OutputPath>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <DynamoVersion>3.0.3</DynamoVersion>
+  </PropertyGroup>
+
+  <!-- Revit 2024 Builds (3 configs) -->
+  <PropertyGroup Condition="'$(Configuration)' == 'R2024_D293'">
+    <TargetFramework>net48</TargetFramework>
+    <RevitVersion>2024</RevitVersion>
+    <OutputPath>$(OutputRoot)R2024_D293\</OutputPath>
+    <LangVersion>7.3</LangVersion>
+    <DynamoVersion>2.19.3</DynamoVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'R2024_D281'">
+    <TargetFramework>net48</TargetFramework>
+    <RevitVersion>2024</RevitVersion>
+    <OutputPath>$(OutputRoot)R2024_D281\</OutputPath>
+    <LangVersion>7.3</LangVersion>
+    <DynamoVersion>2.18.1</DynamoVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'R2024_D270'">
+    <TargetFramework>net48</TargetFramework>
+    <RevitVersion>2024</RevitVersion>
+    <OutputPath>$(OutputRoot)R2024_D270\</OutputPath>
+    <LangVersion>7.3</LangVersion>
+    <DynamoVersion>2.17.0</DynamoVersion>
+  </PropertyGroup>
+
+  <!-- Revit 2023 Builds (2 configs) -->
+  <PropertyGroup Condition="'$(Configuration)' == 'R2023_D261'">
+    <TargetFramework>net48</TargetFramework>
+    <RevitVersion>2023</RevitVersion>
+    <OutputPath>$(OutputRoot)R2023_D261\</OutputPath>
+    <LangVersion>7.3</LangVersion>
+    <DynamoVersion>2.16.1</DynamoVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'R2023_D230'">
+    <TargetFramework>net48</TargetFramework>
+    <RevitVersion>2023</RevitVersion>
+    <OutputPath>$(OutputRoot)R2023_D230\</OutputPath>
+    <LangVersion>7.3</LangVersion>
+    <DynamoVersion>2.13.0</DynamoVersion>
+  </PropertyGroup>
+
+  <!-- Revit 2022 Builds (2 configs) -->
+  <PropertyGroup Condition="'$(Configuration)' == 'R2022_D220'">
+    <TargetFramework>net48</TargetFramework>
+    <RevitVersion>2022</RevitVersion>
+    <OutputPath>$(OutputRoot)R2022_D220\</OutputPath>
+    <LangVersion>7.3</LangVersion>
+    <DynamoVersion>2.12.0</DynamoVersion>
+  </PropertyGroup>
+
+  <!-- ========================================== -->
+  <!-- DEPENDENCIES                               -->
+  <!-- ========================================== -->
+
+  <!-- Dynamo NuGet References (Version determined by PropertyGroup) -->
+  <ItemGroup>
+    <PackageReference Include="DynamoVisualProgramming.ZeroTouchLibrary" Version="$(DynamoVersion)" />
+    <PackageReference Include="DynamoVisualProgramming.Core" Version="$(DynamoVersion)" />
+    <PackageReference Include="DynamoVisualProgramming.WpfUILibrary" Version="$(DynamoVersion)" />
+    <!-- Dependency Injection (both .NET 4.8 and .NET 8 compatible) -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+  </ItemGroup>
+
+  <!-- .NET 4.8 Specific references -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="System.Net.Http" />
+    <!-- Required for 'dynamic' keyword in net48 (was previously a transitive dep of Supabase) -->
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <!-- Use Newtonsoft.Json for .NET 4.8 to avoid DLL Hell with Revit 2022-2024 -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <!-- Markdig for markdown rendering -->
+    <PackageReference Include="Markdig" Version="0.31.0" />
+  </ItemGroup>
+
+  <!-- .NET 8 Specific references -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+     <!-- Built-in SDK handles most WPF/WinForms refs -->
+     <!-- Markdig for markdown rendering -->
+     <PackageReference Include="Markdig" Version="0.31.0" />
+  </ItemGroup>
+
+  <!-- .NET 10 Specific references (Revit 2027+) -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
+     <!-- Markdig for markdown rendering -->
+     <PackageReference Include="Markdig" Version="0.31.0" />
+  </ItemGroup>
+
+  <!-- ========================================== -->
+  <!-- EXCLUDE TEST PROJECT & LEGACY FILES        -->
+  <!-- ========================================== -->
+  <ItemGroup>
+    <Compile Remove="BIBIM_MVP.Tests\**" />
+    <None Remove="BIBIM_MVP.Tests\**" />
+    <EmbeddedResource Remove="BIBIM_MVP.Tests\**" />
+    <!-- Legacy folder deleted (v2.3.10) -->
+    <!-- Exclude V3 project (separate solution) -->
+    <Compile Remove="BIBIM_V3\**" />
+    <None Remove="BIBIM_V3\**" />
+    <EmbeddedResource Remove="BIBIM_V3\**" />
+    <Content Remove="BIBIM_V3\**" />
+    <!-- Exclude share folder (Kiro AI context files) -->
+    <Compile Remove="share\**" />
+    <None Remove="share\**" />
+    <EmbeddedResource Remove="share\**" />
+    <Content Remove="share\**" />
+  </ItemGroup>
+
+  <!-- ========================================== -->
+  <!-- CONTENT FILES                             -->
+  <!-- ========================================== -->
+  
+  <!-- Copy configuration files to output directory -->
+  <ItemGroup>
+    <!-- rag_config.json: Debug only — release bins must NOT bundle this file.
+         The installer generates a fresh rag_config.json via CreateRagConfigFile().
+         Bundling the dev copy risks shipping API keys stored locally. -->
+    <None Include="Config\rag_config.json" Condition="'$(Configuration)' == 'Debug'">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>rag_config.json</Link>
+    </None>
+    <!-- rag_config.template.json: included in all builds as a fallback reference for manual installs -->
+    <None Include="Config\rag_config.template.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>rag_config.template.json</Link>
+    </None>
+    <None Include="Config\i18n\*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>i18n\%(Filename)%(Extension)</Link>
+    </None>
+    <None Include="BIBIM_ViewExtensionDefinition.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="BIBIM_Manifest.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="pkg.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <!-- ========================================== -->
+  <!-- ICON RESOURCES                            -->
+  <!-- ========================================== -->
+  
+  <!-- Include icon files as resources -->
+  <ItemGroup>
+    <Resource Include="Assets\Icons\*.png" />
+    <Resource Include="Assets\Icons\*.ico" />
+  </ItemGroup>
+
+  <!-- Copy icon files to output directory for notifications and installer -->
+  <ItemGroup>
+    <None Include="Assets\Icons\bibim-icon-white.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>bibim-icon-white.ico</Link>
+    </None>
+    <None Include="Assets\Icons\bibim-icon-blue.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>bibim-icon-blue.ico</Link>
+    </None>
+  </ItemGroup>
+
+</Project>

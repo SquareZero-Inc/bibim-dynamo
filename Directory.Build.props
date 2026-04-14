@@ -1,0 +1,10 @@
+<Project>
+  <PropertyGroup>
+    <!-- Single source of truth for version -->
+    <BibimVersion>1.0.0</BibimVersion>
+    <Version>$(BibimVersion)</Version>
+    <AssemblyVersion>$(BibimVersion).0</AssemblyVersion>
+    <FileVersion>$(BibimVersion).0</FileVersion>
+    <InformationalVersion>$(BibimVersion)</InformationalVersion>
+  </PropertyGroup>
+</Project>

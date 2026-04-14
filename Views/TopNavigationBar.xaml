@@ -1,0 +1,152 @@
+<UserControl x:Class="BIBIM_MVP.TopNavigationBar"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="clr-namespace:BIBIM_MVP"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="56" d:DesignWidth="480">
+    
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/BIBIM_MVP;component/Styles/GlobalStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            
+            <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+            
+            <!-- 드롭다운 메뉴 스타일 -->
+            <Style x:Key="SettingsMenuStyle" TargetType="ContextMenu">
+                <Setter Property="Background" Value="#2D2D30"/>
+                <Setter Property="BorderBrush" Value="#3E3E42"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="Padding" Value="8"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ContextMenu">
+                            <Border Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="8"
+                                    Padding="{TemplateBinding Padding}">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="16" ShadowDepth="4" 
+                                                      Opacity="0.4" Color="Black"/>
+                                </Border.Effect>
+                                <StackPanel IsItemsHost="True"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            
+            <!-- 메뉴 아이템 스타일 -->
+            <Style x:Key="SettingsMenuItemStyle" TargetType="MenuItem">
+                <Setter Property="Foreground" Value="#E1E1E1"/>
+                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="FontFamily" Value="Pretendard, Malgun Gothic, Segoe UI"/>
+                <Setter Property="Height" Value="40"/>
+                <Setter Property="Padding" Value="12,0"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="MenuItem">
+                            <Border x:Name="MenuItemBorder" Background="Transparent" 
+                                    CornerRadius="4" Padding="{TemplateBinding Padding}">
+                                <ContentPresenter ContentSource="Header" 
+                                                  VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="MenuItemBorder" Property="Background" Value="#3E3E42"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            
+            <!-- 구분선 스타일 -->
+            <Style x:Key="MenuSeparatorStyle" TargetType="Separator">
+                <Setter Property="Background" Value="#3E3E42"/>
+                <Setter Property="Height" Value="1"/>
+                <Setter Property="Margin" Value="0,4"/>
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    
+    <!-- 높이 56px, 패딩 0 20px -->
+    <Border Background="#252526" Padding="20,0" BorderBrush="#3E3E42" BorderThickness="0,0,0,1" Height="56">
+        <Grid VerticalAlignment="Center">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Back Button (조건부 표시) -->
+            <Button x:Name="BackButton" Grid.Column="0"
+                    Width="32" Height="32"
+                    Click="BackButton_Click"
+                    Cursor="Hand"
+                    Margin="0,0,12,0"
+                    Visibility="{Binding ShowBackButton, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVis}}">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="BackBtnBorder" Background="Transparent" CornerRadius="6">
+                            <TextBlock Text="‹" FontSize="22" FontWeight="Bold"
+                                       Foreground="#CCCCCC"
+                                       HorizontalAlignment="Center" 
+                                       VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="BackBtnBorder" Property="Background" Value="#3E3E42"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+
+            <!-- Left: App Title -->
+            <TextBlock Grid.Column="1" 
+                       Text="{loc:Loc Nav_AppTitle}" 
+                       Foreground="#E1E1E1" 
+                       FontSize="16" 
+                       FontWeight="Bold"
+                       FontFamily="Pretendard, Malgun Gothic, Segoe UI"
+                       VerticalAlignment="Center"/>
+
+            <!-- Settings Button - 36x36, 아이콘 20px -->
+            <Button Grid.Column="3"
+                    x:Name="SettingsButton"
+                    Width="36" Height="36"
+                    Click="SettingsButton_Click"
+                    VerticalAlignment="Center"
+                    Cursor="Hand">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="SettingsBtnBorder" Background="Transparent" CornerRadius="6">
+                            <TextBlock Text="⚙" FontSize="20" 
+                                       Foreground="#CCCCCC"
+                                       HorizontalAlignment="Center" 
+                                       VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="SettingsBtnBorder" Property="Background" Value="#3E3E42"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+                <Button.ContextMenu>
+                    <ContextMenu x:Name="SettingsMenu" Style="{StaticResource SettingsMenuStyle}">
+                        <MenuItem Header="{loc:Loc Nav_ApiKeySettings}" Click="ApiKeySettings_Click"
+                                  Style="{StaticResource SettingsMenuItemStyle}"/>
+                    </ContextMenu>
+                </Button.ContextMenu>
+            </Button>
+        </Grid>
+    </Border>
+</UserControl>

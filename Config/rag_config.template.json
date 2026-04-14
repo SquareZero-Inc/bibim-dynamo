@@ -1,0 +1,21 @@
+{
+  "_comment": "BIBIM AI config template. The installer generates rag_config.json automatically. You can also copy this file manually and fill in your API keys.",
+  "claude_model": "claude-sonnet-4-6",
+  "gemini_model": "gemini-2.0-flash",
+  "active_store": "",
+  "fallback_store": "",
+  "api_keys": {
+    "claude_api_key": "YOUR_ANTHROPIC_API_KEY_HERE",
+    "gemini_api_key": ""
+  },
+  "validation": {
+    "gate_enabled": true,
+    "auto_fix_enabled": true,
+    "auto_fix_max_attempts": 2,
+    "verify_stage_enabled": false,
+    "verify_timeout_seconds": 30,
+    "rag_timeout_seconds": 25,
+    "enable_api_xml_hints": true,
+    "rollout_phase": "phase3"
+  }
+}
