@@ -27,6 +27,7 @@
   #define TextRunGuideStep3 "3. In the top menu, click Extensions > Open BIBIM Chat"
   #define TextRunGuideTipLine1 "Tip: BIBIM AI runs as an extension inside Dynamo."
   #define TextRunGuideTipLine2 "Use it only when both Revit and Dynamo are running."
+  #define TextRunGuideApiKeyLine "Enter your Anthropic API key in Settings (gear icon) to get started. Get one at: console.anthropic.com/account/keys"
   #define TextVersionPageTitle "Version Selection"
   #define TextVersionPageDesc "Select the Revit and Dynamo versions for BIBIM Copilot installation."
   #define TextDetectedPairsHeader "Detected Revit-Dynamo versions:"
@@ -47,6 +48,7 @@
   #define TextRunGuideStep3 "3. 상단 메뉴에서 확장(Extensions) > Open BIBIM Chat 클릭"
   #define TextRunGuideTipLine1 "Tip: BIBIM AI는 Dynamo 내에서 실행되는 확장 프로그램입니다."
   #define TextRunGuideTipLine2 "Revit과 Dynamo가 모두 실행된 상태에서만 사용할 수 있습니다."
+  #define TextRunGuideApiKeyLine "설정(⚙)에서 Anthropic API 키를 입력하면 바로 사용할 수 있습니다. 발급: console.anthropic.com/account/keys"
   #define TextVersionPageTitle "버전 선택"
   #define TextVersionPageDesc "BIBIM Copilot을 설치할 Revit과 Dynamo 버전을 선택하세요."
   #define TextDetectedPairsHeader "감지된 Revit-Dynamo 버전:"
@@ -76,7 +78,9 @@ OutputBaseFilename=BIBIM_Setup_{#AppLanguage}_v{#MyAppVersion}
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
-UninstallDisplayIcon={app}\BIBIM_MVP.dll
+LicenseFile=LICENSE
+SetupIconFile=Assets\Icons\bibim-icon-blue.ico
+UninstallDisplayIcon={app}\bibim-icon-blue.ico
 ; Use code functions to set dynamic AppId and display name
 UsePreviousAppDir=no
 
@@ -521,7 +525,7 @@ end;
 // ============================================================
 procedure CreateRunGuidePage();
 var
-  TitleLabel, Step1Label, Step2Label, Step3Label, TipLabel: TNewStaticText;
+  TitleLabel, Step1Label, Step2Label, Step3Label, TipLabel, ApiKeyLabel: TNewStaticText;
 begin
   RunGuidePage := CreateCustomPage(
     wpInstalling,
@@ -591,6 +595,18 @@ begin
   TipLabel.WordWrap := True;
   TipLabel.Caption := '{#TextRunGuideTipLine1}' + #13#10 + '      {#TextRunGuideTipLine2}';
   TipLabel.Font.Color := $00808080; // Gray
+
+  // API Key hint
+  ApiKeyLabel := TNewStaticText.Create(RunGuidePage);
+  ApiKeyLabel.Parent := RunGuidePage.Surface;
+  ApiKeyLabel.Top := 440;
+  ApiKeyLabel.Left := 0;
+  ApiKeyLabel.Width := RunGuidePage.SurfaceWidth;
+  ApiKeyLabel.Height := 36;
+  ApiKeyLabel.WordWrap := True;
+  ApiKeyLabel.Caption := '{#TextRunGuideApiKeyLine}';
+  ApiKeyLabel.Font.Size := 9;
+  ApiKeyLabel.Font.Color := $00005500; // Dark green
 end;
 
 procedure InitializeWizard();
