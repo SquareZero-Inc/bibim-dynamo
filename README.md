@@ -127,7 +127,7 @@ You can edit this file directly, or use the Settings dialog in the UI.
 dotnet build BIBIM_MVP.csproj -c Debug
 
 # Release builds by Revit version
-dotnet build BIBIM_MVP.csproj -c R2027_D402   # Revit 2027, Dynamo 4.0.2 (.NET 10)
+dotnet build BIBIM_MVP.csproj -c R2027_D402   # Revit 2027, Dynamo 27.0 (.NET 10)
 dotnet build BIBIM_MVP.csproj -c R2026_D361   # Revit 2026, Dynamo 3.6.1 (.NET 8)
 dotnet build BIBIM_MVP.csproj -c R2025_D330   # Revit 2025, Dynamo 3.3.0 (.NET 8)
 dotnet build BIBIM_MVP.csproj -c R2024_D293   # Revit 2024, Dynamo 2.19.3 (.NET 4.8)
@@ -144,7 +144,7 @@ Output: `bin/{language}/{configuration}/`
 
 | Revit | Dynamo | .NET | Build Config |
 |-------|--------|------|--------------|
-| 2027 | 4.0.2 | 10 | R2027_D402 |
+| 2027 | 27.0 | 10 | R2027_D402 |
 | 2026 | 3.6.1 / 3.6.0 / 3.5.0 / 3.4.1 | 8 | R2026_D3xx |
 | 2025 | 3.3.0 / 3.2.1 / 3.0.3 | 8 | R2025_D3xx |
 | 2024 | 2.19.3 / 2.18.1 / 2.17.0 | 4.8 | R2024_D2xx |
