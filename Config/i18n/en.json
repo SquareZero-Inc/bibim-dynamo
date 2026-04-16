@@ -17,6 +17,8 @@
   "Nav_History": "Chat history",
   "Nav_Settings": "Settings",
   "Nav_ApiKeySettings": "API Key Settings",
+  "Nav_ReportBug": "🐛 Report a Bug",
+  "Nav_SuggestFeature": "💡 Suggest a Feature",
 
   "ApiKey_ClaudeKeyRequired": "Please enter your Anthropic API key.",
   "ApiKey_InvalidFormat": "Invalid key format. Anthropic keys start with 'sk-ant-'.",

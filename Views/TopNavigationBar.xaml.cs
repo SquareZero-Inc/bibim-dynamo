@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -48,6 +49,28 @@ namespace BIBIM_MVP
             catch (Exception ex)
             {
                 Logger.LogError("TopNavigationBar.ApiKeySettings_Click", ex);
+            }
+        }
+
+        private void ReportBug_Click(object sender, RoutedEventArgs e)
+        {
+            OpenUrl("https://github.com/SquareZero-Inc/bibim-dynamo/issues/new?labels=bug&template=bug_report.md");
+        }
+
+        private void SuggestFeature_Click(object sender, RoutedEventArgs e)
+        {
+            OpenUrl("https://github.com/SquareZero-Inc/bibim-dynamo/issues/new?labels=enhancement&template=feature_request.md");
+        }
+
+        private static void OpenUrl(string url)
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError("TopNavigationBar.OpenUrl", ex);
             }
         }
 

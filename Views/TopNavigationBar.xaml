@@ -144,6 +144,11 @@
                     <ContextMenu x:Name="SettingsMenu" Style="{StaticResource SettingsMenuStyle}">
                         <MenuItem Header="{loc:Loc Nav_ApiKeySettings}" Click="ApiKeySettings_Click"
                                   Style="{StaticResource SettingsMenuItemStyle}"/>
+                        <Separator Style="{StaticResource MenuSeparatorStyle}"/>
+                        <MenuItem Header="{loc:Loc Nav_ReportBug}" Click="ReportBug_Click"
+                                  Style="{StaticResource SettingsMenuItemStyle}"/>
+                        <MenuItem Header="{loc:Loc Nav_SuggestFeature}" Click="SuggestFeature_Click"
+                                  Style="{StaticResource SettingsMenuItemStyle}"/>
                     </ContextMenu>
                 </Button.ContextMenu>
             </Button>

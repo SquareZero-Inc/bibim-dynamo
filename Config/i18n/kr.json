@@ -17,6 +17,8 @@
   "Nav_History": "대화 기록",
   "Nav_Settings": "설정",
   "Nav_ApiKeySettings": "API 키 설정",
+  "Nav_ReportBug": "🐛 버그 신고",
+  "Nav_SuggestFeature": "💡 기능 제안",
 
   "ApiKey_ClaudeKeyRequired": "Anthropic API 키를 입력해주세요.",
   "ApiKey_InvalidFormat": "올바르지 않은 키 형식입니다. Anthropic 키는 'sk-ant-'로 시작합니다.",
