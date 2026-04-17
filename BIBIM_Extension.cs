@@ -48,7 +48,7 @@ namespace BIBIM_MVP
                     {
                         Log("Menu item clicked");
 
-                        // Version check (OSS: always passes — no Supabase DB)
+                        // Version check via GitHub Releases
                         var versionResult = await VersionChecker.Instance.CheckForUpdatesAsync();
                         if (versionResult.UpdateRequired && versionResult.IsMandatory)
                         {

@@ -42,16 +42,16 @@ namespace BIBIM_MVP
         // 대화 히스토리 저장 (API 호출 시 컨텍스트 유지)
         private readonly List<ChatMessage> _conversationHistory = new List<ChatMessage>();
 
-        // Error-resilient context management (Task 5.1)
+        // Error-resilient context management
         private ConversationContextManager _contextManager;
 
-        // Spec-first code generation (Task 7.1)
+        // Spec-first code generation
         private readonly SpecificationManager _specManager;
 
         // Generation pipeline orchestrator (separates pipeline concerns from ViewModel)
         private readonly GenerationPipelineService _pipeline;
         
-        // Bypass prefix for direct code generation (Task 7.2)
+        // Bypass prefix for direct code generation
         private const string BypassPrefix = "!direct ";
         private const string BypassPrefixAlt = "/direct ";
         
@@ -114,13 +114,13 @@ namespace BIBIM_MVP
         public ObservableCollection<HistoryEntry> HistoryList { get; } = new ObservableCollection<HistoryEntry>();
 
         /// <summary>
-        /// Task 7.1: Indicates if there's a pending spec awaiting confirmation.
+        /
         /// Exposes SpecificationManager state for UI binding.
         /// </summary>
         public bool HasPendingSpec => _specManager.HasPendingSpec;
 
         /// <summary>
-        /// Task 5.3: Indicates if the retry button should be visible.
+        /
         /// Requirement: 2.1, 8.1
         /// </summary>
         private bool _isRetryButtonVisible;
@@ -140,24 +140,24 @@ namespace BIBIM_MVP
         public ICommand NewChatCommand { get; }
 
         /// <summary>
-        /// Task 7.5: Command to confirm the current specification.
+        /
         /// Bound to confirm button in spec card.
         /// </summary>
         public ICommand ConfirmSpecCommand { get; }
 
         /// <summary>
-        /// Task 7.8: Command to request changes to the specification.
+        /
         /// Bound to modify button in spec card.
         /// </summary>
         public ICommand RequestChangesCommand { get; }
 
         /// <summary>
-        /// Task 7.9: Command to cancel/clear the pending specification.
+        /
         /// </summary>
         public ICommand CancelSpecCommand { get; }
 
         /// <summary>
-        /// Task 5.3: Command to retry failed API request.
+        /
         /// Requirement: 2.1
         /// </summary>
         public ICommand RetryCommand { get; }
@@ -177,8 +177,6 @@ namespace BIBIM_MVP
             _viewLoadedParams = viewLoadedParams;
             _localSessionManager = new LocalSessionManager();
             _nodeManipulator = new NodeManipulator(viewLoadedParams);
-
-            // Task 7.1: Initialize SpecificationManager and wire event
             _specManager = new SpecificationManager();
             _specManager.SpecStateChanged += OnSpecStateChanged;
 
@@ -190,12 +188,10 @@ namespace BIBIM_MVP
             LoadHistoryCommand = new RelayCommand(async (obj) => await LoadHistoryEntryAsync(obj));
             NewChatCommand = new RelayCommand((obj) => { StartNewChat(); return Task.CompletedTask; });
 
-            // Task 7.5, 7.8, 7.9: Initialize spec-first commands
+
             ConfirmSpecCommand = new RelayCommand(async (obj) => await ConfirmSpecAsync());
             RequestChangesCommand = new RelayCommand((obj) => { RequestChanges(); return Task.CompletedTask; });
             CancelSpecCommand = new RelayCommand((obj) => { CancelSpec(); return Task.CompletedTask; });
-
-            // Task 5.3: Initialize retry command
             RetryCommand = new RelayCommand(async (obj) => await HandleRetryAsync(), (obj) => !IsBusy);
 
             // Initialize cancel command
@@ -209,7 +205,7 @@ namespace BIBIM_MVP
         }
 
         /// <summary>
-        /// Task 7.1: Handle SpecStateChanged event to notify UI of property changes.
+        /
         /// </summary>
         private void OnSpecStateChanged(object sender, SpecStateChangedEventArgs e)
         {
@@ -218,7 +214,7 @@ namespace BIBIM_MVP
 
         /// <summary>
         /// Starts a new chat session, clearing current conversation.
-        /// Task 8.2: Initialize context and clear UI
+        /
         /// Requirements: 4.2
         /// </summary>
         private void StartNewChat()
@@ -226,21 +222,15 @@ namespace BIBIM_MVP
             _currentSession = _localSessionManager.CreateSession();
             ClearConversationHistory();
             TokenTracker.ResetSession();
-
-            // Task 8.1: Clear pending spec when starting new chat
             _specManager.ClearPendingSpec();
 
             _lastGeneratedPythonNodeGuid = null;
             _lastConfirmedSpec = null;
             _lastConfirmedSpecAtUtc = DateTime.MinValue;
-            
-            // Task 8.2: Start new session in context manager (Requirement 4.2)
             if (_contextManager != null)
             {
                 _contextManager.StartNewSession(_currentSession.SessionId);
             }
-            
-            // Task 8.2: Hide retry button for new session
             IsRetryButtonVisible = false;
             
             MessagesUpdated?.Invoke(this, "");
@@ -287,7 +277,7 @@ namespace BIBIM_MVP
         }
 
         /// <summary>
-        /// Task 7.2: Append error message to chat with HTML formatting.
+        /
         /// Requirements: 3.1, 3.2
         /// </summary>
         /// <param name="errorMessage">The user-friendly error message to display</param>
@@ -345,15 +335,13 @@ namespace BIBIM_MVP
 
             // Save user message to history (new format)
             SaveSingleMessage("user", "text", userMsg, null, requestId);
-
-            // Task 7.2: Route to spec-first flow or direct generation
             await HandleSpecFirstFlowAsync(userMsg, requestId);
             requestTotalSw.Stop();
             LogPerf(requestId, "request-total", requestTotalSw.ElapsedMilliseconds);
         }
 
         /// <summary>
-        /// Task 7.2: Handles the spec-first flow when user sends a message.
+        /
         /// - Check if bypass prefix is present (e.g., "!direct ")
         /// - If bypass: call existing direct code generation flow
         /// - If no pending spec: call SpecGenerator.GenerateSpecificationAsync()
@@ -392,8 +380,6 @@ namespace BIBIM_MVP
                     StatusText = "";
                     return;
                 }
-
-                // Task 7.2: Check for bypass prefix
                 bool isBypass = userMessage.StartsWith(BypassPrefix, StringComparison.OrdinalIgnoreCase) ||
                                userMessage.StartsWith(BypassPrefixAlt, StringComparison.OrdinalIgnoreCase);
 
@@ -416,8 +402,6 @@ namespace BIBIM_MVP
                     HandleCancellation();
                     return;
                 }
-
-                // Task 7.2: Check if we have a pending spec
                 if (_specManager.HasPendingSpec)
                 {
                     // Route to revision flow - user message is treated as feedback
@@ -469,7 +453,7 @@ namespace BIBIM_MVP
         /// <summary>
         /// Direct code generation flow (bypass spec-first).
         /// Uses the existing GeminiService flow.
-        /// Task 5.2: Added try-catch for API error handling
+        /
         /// </summary>
         private async Task DirectCodeGenerationAsync(string userMessage, string requestId = null)
         {
@@ -502,7 +486,6 @@ namespace BIBIM_MVP
             }
             catch (Exception ex)
             {
-                // Task 5.2: Handle API error
                 await HandleApiError(userMessage, ex);
             }
             finally
@@ -517,7 +500,7 @@ namespace BIBIM_MVP
         /// If the response is a general chat (not code request), display it directly.
         /// If the spec has clarifying questions, display them as conversational questions first.
         /// Only show the spec card when all questions are resolved.
-        /// Task 5.2: Added context management and error handling
+        /
         /// </summary>
         private async Task GenerateNewSpecificationAsync(string userMessage, string requestId = null)
         {
@@ -616,14 +599,13 @@ Output: {spec.Output?.Description ?? "N/A"}";
             }
             catch (Exception ex)
             {
-                // Task 5.2: Handle API error
                 await HandleApiError(userMessage, ex);
             }
         }
 
         /// <summary>
         /// Revise existing specification based on user feedback.
-        /// Task 5.2: Added context management and error handling
+        /
         /// </summary>
         private async Task ReviseSpecificationAsync(string userFeedback, string requestId = null)
         {
@@ -741,13 +723,12 @@ Output: {revisedSpec.Output?.Description ?? "N/A"}";
             }
             catch (Exception ex)
             {
-                // Task 5.2: Handle API error
                 await HandleApiError(userFeedback, ex);
             }
         }
 
         /// <summary>
-        /// Task 7.5: Handler for ConfirmSpecCommand.
+        /
         /// Confirms the pending specification and generates code.
         /// </summary>
         private async Task ConfirmSpecAsync()
@@ -799,9 +780,9 @@ Output: {revisedSpec.Output?.Description ?? "N/A"}";
         }
 
         /// <summary>
-        /// Task 7.6: Generates code from a confirmed specification.
+        /
         /// Builds prompt including spec details and calls GeminiService.
-        /// Task 5.2: Added context management and error handling
+        /
         /// </summary>
         /// <param name="spec">The confirmed specification.</param>
         /// <returns>True if code generation succeeded, false if an error occurred.</returns>
@@ -840,7 +821,6 @@ Output: {revisedSpec.Output?.Description ?? "N/A"}";
             }
             catch (Exception ex)
             {
-                // Task 5.2: Handle API error
                 await HandleApiError(spec.OriginalRequest, ex);
                 success = false;
             }
@@ -857,7 +837,7 @@ Output: {revisedSpec.Output?.Description ?? "N/A"}";
         }
 
         /// <summary>
-        /// Task 7.6: Builds a prompt that includes specification details.
+        /
         /// Ensures the code generator has full context from the confirmed spec.
         /// </summary>
         private string BuildSpecEnhancedPrompt(CodeSpecification spec)
@@ -898,7 +878,7 @@ Output: {revisedSpec.Output?.Description ?? "N/A"}";
         }
 
         /// <summary>
-        /// Task 5.3: Handle API error by classifying, creating retry context, and displaying error message.
+        /
         /// Requirements: 3.1, 3.2, 3.3, 7.1, 7.5
         /// </summary>
         private async Task HandleApiError(string userMessage, Exception ex)
@@ -936,7 +916,7 @@ Output: {revisedSpec.Output?.Description ?? "N/A"}";
 ", " | ")}");
                 }
 
-                // Create retry context (Requirement 1.4)
+                // Create retry context ()
                 if (_contextManager != null)
                 {
                     _contextManager.CreateRetryContext(userMessage, errorType);
@@ -944,7 +924,7 @@ Output: {revisedSpec.Output?.Description ?? "N/A"}";
                     _contextManager.SaveSession();
                 }
 
-                // Determine error message based on error type and consecutive error count (Requirement 7.5)
+                // Determine error message based on error type and consecutive error count ()
                 string errorMessage;
                 
                 // AI 서버 오류인 경우 유저 친화적 메시지 표시
@@ -962,10 +942,10 @@ Output: {revisedSpec.Output?.Description ?? "N/A"}";
                     errorMessage = L("ViewModel_ServerBusy");
                 }
 
-                // Display error message using AppendErrorMessageToChat (Task 7.2, Requirement 3.1, 3.2, 3.3)
+                // Display error message using AppendErrorMessageToChat
                 AppendErrorMessageToChat(errorMessage);
 
-                // Show retry button (Requirement 2.1)
+                // Show retry button ()
                 IsRetryButtonVisible = true;
 
                 // Track error event with enhanced details
@@ -979,7 +959,7 @@ Output: {revisedSpec.Output?.Description ?? "N/A"}";
         }
 
         /// <summary>
-        /// Task 5.4: Classify API error based on exception type and HTTP status code.
+        /
         /// Requirement: 7.1
         /// </summary>
         private string ClassifyError(Exception ex)
@@ -1042,7 +1022,7 @@ Output: {revisedSpec.Output?.Description ?? "N/A"}";
         }
 
         /// <summary>
-        /// Task 6.2: Handle retry operation.
+        /
         /// Requirements: 2.2, 2.3, 6.1, 6.4, 6.5
         /// </summary>
         private async Task HandleRetryAsync()
@@ -1061,8 +1041,6 @@ Output: {revisedSpec.Output?.Description ?? "N/A"}";
             Logger.Log(
                 "ChatWorkspaceViewModel",
                 $"[PERF] rid={requestId} step=request-start detail=retry_prompt_len:{retryContext.OriginalUserMessage?.Length ?? 0}");
-
-            // Task 7.3: Show retry loading indicator
             ShowRetryLoading();
             var codeFlowSw = Stopwatch.StartNew();
 
@@ -1122,14 +1100,12 @@ Output: {revisedSpec.Output?.Description ?? "N/A"}";
                 LogPerf(requestId, "code-flow", codeFlowSw.ElapsedMilliseconds, "retry");
                 requestTotalSw.Stop();
                 LogPerf(requestId, "request-total", requestTotalSw.ElapsedMilliseconds);
-
-                // Task 7.3: Hide retry loading indicator
                 HideRetryLoading();
             }
         }
 
         /// <summary>
-        /// Task 7.3: Show loading indicator during retry operation.
+        /
         /// Requirement: 8.2
         /// </summary>
         private void ShowRetryLoading()
@@ -1141,7 +1117,7 @@ Output: {revisedSpec.Output?.Description ?? "N/A"}";
         }
 
         /// <summary>
-        /// Task 7.3: Hide loading indicator after retry operation completes.
+        /
         /// Requirement: 8.2
         /// </summary>
         private void HideRetryLoading()
@@ -1152,7 +1128,7 @@ Output: {revisedSpec.Output?.Description ?? "N/A"}";
         }
 
         /// <summary>
-        /// Task 7.8: Handler for RequestChangesCommand.
+        /
         /// Displays prompt for user to enter feedback.
         /// </summary>
         private void RequestChanges()
@@ -1170,7 +1146,7 @@ Output: {revisedSpec.Output?.Description ?? "N/A"}";
         }
 
         /// <summary>
-        /// Task 7.9: Handler for CancelSpecCommand.
+        /
         /// Clears the pending specification and displays cancellation message.
         /// </summary>
         private void CancelSpec()
@@ -2066,8 +2042,6 @@ TYPE:", "
             IsHistoryPanelVisible = false;
             _htmlContent.Clear();
             _conversationHistory.Clear();
-
-            // Task 8.3: Clear pending spec when loading history (Requirement 4.4)
             _specManager.ClearPendingSpec();
 
             _lastConfirmedSpec = null;
@@ -2079,8 +2053,6 @@ TYPE:", "
 
             // Set as current session for continuing conversation
             _currentSession = session;
-
-            // Task 8.1: Restore session context using ConversationContextManager
             // Requirements: 4.3, 4.4
             // FIX: Also restore _conversationHistory from SessionContext.Turns for LLM API calls
             if (_contextManager != null)
@@ -2147,8 +2119,6 @@ TYPE:", "
                 {
                     DisplaySingleMessage(msg);
                 }
-                
-                // Task 8.1: Display error messages from session context if any
                 // Requirements: 4.3, 4.4
                 if (_contextManager != null)
                 {

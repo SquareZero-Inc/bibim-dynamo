@@ -31,9 +31,9 @@ namespace BIBIM_MVP
     }
 
     /// <summary>
-    /// OSS BYOK: Version check via Supabase removed.
-    /// CheckForUpdatesAsync always returns NoUpdateNeeded.
-    /// Mandatory update enforcement is a commercial-only feature.
+    /// Checks GitHub Releases (SquareZero-Inc/bibim-dynamo) for a newer version.
+    /// Mandatory update: release body contains "[MANDATORY]".
+    /// Asset selection: picks the KO or EN installer based on AppLanguage.IsEnglish.
     /// </summary>
     public class VersionChecker : IVersionChecker
     {
@@ -70,7 +70,7 @@ namespace BIBIM_MVP
         }
 
         /// <summary>
-        /// OSS BYOK: No Supabase version table — always allow app to run.
+
         /// </summary>
         public Task<VersionCheckResult> CheckForUpdatesAsync()
         {
