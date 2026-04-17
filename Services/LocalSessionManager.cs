@@ -497,8 +497,15 @@ namespace BIBIM_MVP
             }
             catch (Exception ex)
             {
-                // JSON parse error - return empty storage, don't corrupt existing data
+                // JSON parse error — backup corrupt file, then start fresh
                 Logger.Log("LocalSessionManager.LoadStorage", $"Failed to parse sessions.json, starting fresh: {ex.Message}");
+                try
+                {
+                    string corruptPath = _sessionsFilePath + ".corrupt";
+                    File.Copy(_sessionsFilePath, corruptPath, overwrite: true);
+                    Logger.Log("LocalSessionManager.LoadStorage", $"Corrupt file backed up to: {corruptPath}");
+                }
+                catch { }
                 _cache = new SessionStorage();
             }
 

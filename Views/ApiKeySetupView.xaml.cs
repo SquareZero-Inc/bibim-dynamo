@@ -20,6 +20,12 @@ namespace BIBIM_MVP
     /// </summary>
     public partial class ApiKeySetupView : Window
     {
+        // Sentinel shown in PasswordBox when key already exists — never written to config
+        private const string KeyPlaceholder = "sk-ant-••••••••••••••••";
+        private const string GeminiPlaceholder = "AIza•••••••••••••••••••";
+        private string _existingClaudeKey;
+        private string _existingGeminiKey;
+
         public ApiKeySetupView()
         {
             InitializeComponent();
@@ -30,19 +36,20 @@ namespace BIBIM_MVP
         {
             try
             {
-                string existingClaudeKey = ClaudeApiClient.GetClaudeApiKey();
-                if (!string.IsNullOrEmpty(existingClaudeKey))
+                _existingClaudeKey = ClaudeApiClient.GetClaudeApiKey();
+                if (!string.IsNullOrEmpty(_existingClaudeKey))
                 {
-                    ApiKeyBox.Password = existingClaudeKey;
+                    ApiKeyBox.Password = KeyPlaceholder;
                     ClaudeModelCombo.IsEnabled = true;
                 }
 
                 var config = ConfigService.GetRagConfig();
                 if (config == null) return;
 
-                if (!string.IsNullOrEmpty(config.GeminiApiKey))
+                _existingGeminiKey = config.GeminiApiKey;
+                if (!string.IsNullOrEmpty(_existingGeminiKey))
                 {
-                    GeminiApiKeyBox.Password = config.GeminiApiKey;
+                    GeminiApiKeyBox.Password = GeminiPlaceholder;
                     GeminiModelCombo.IsEnabled = true;
                 }
 
@@ -94,6 +101,8 @@ namespace BIBIM_MVP
         private void TrySave()
         {
             string claudeKey = ApiKeyBox.Password?.Trim();
+            // Resolve sentinel: user did not change the existing key
+            if (claudeKey == KeyPlaceholder) claudeKey = _existingClaudeKey;
             if (string.IsNullOrEmpty(claudeKey))
             {
                 ShowError(LocalizationService.Get("ApiKey_ClaudeKeyRequired"));
@@ -106,6 +115,7 @@ namespace BIBIM_MVP
             }
 
             string geminiKey = GeminiApiKeyBox.Password?.Trim();
+            if (geminiKey == GeminiPlaceholder) geminiKey = _existingGeminiKey;
             string claudeModel = GetSelectedTag(ClaudeModelCombo, "claude-sonnet-4-6");
             string geminiModel = GetSelectedTag(GeminiModelCombo, "gemini-2.0-flash");
 

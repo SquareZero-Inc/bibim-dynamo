@@ -54,12 +54,12 @@ namespace BIBIM_MVP
 
         private void ReportBug_Click(object sender, RoutedEventArgs e)
         {
-            OpenUrl("https://github.com/SquareZero-Inc/bibim-dynamo/issues/new?labels=bug&template=bug_report.md");
+            OpenUrl("https://github.com/SquareZero-Inc/bibim-dynamo/issues/new?labels=bug&template=bug_report.yml");
         }
 
         private void SuggestFeature_Click(object sender, RoutedEventArgs e)
         {
-            OpenUrl("https://github.com/SquareZero-Inc/bibim-dynamo/issues/new?labels=enhancement&template=feature_request.md");
+            OpenUrl("https://github.com/SquareZero-Inc/bibim-dynamo/issues/new?labels=enhancement&template=feature_request.yml");
         }
 
         private static void OpenUrl(string url)
