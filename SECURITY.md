@@ -1,0 +1,31 @@
+# Security Policy
+
+## Reporting a vulnerability
+
+**Do not open a public issue for security vulnerabilities.**
+
+Email: dev@sqzr.team
+
+Include:
+- Description of the vulnerability
+- Steps to reproduce
+- Potential impact
+- Any suggested fix (optional)
+
+We'll acknowledge within 3 business days and aim to ship a fix within 14 days depending on severity.
+
+## Scope
+
+This policy covers the `SquareZero-Inc/bibim-dynamo` codebase.
+
+The BIBIM extension handles:
+- Your Anthropic API key (stored locally in `%AppData%\BIBIM\rag_config.json`)
+- Active Dynamo graph context passed to the Claude API
+- Generated Python code executed inside the Dynamo Python Script node
+
+None of this data leaves your machine except for API calls to `api.anthropic.com`.
+
+## Out of scope
+
+- Issues in third-party dependencies (report upstream)
+- API key leakage caused by user sharing their own `rag_config.json`

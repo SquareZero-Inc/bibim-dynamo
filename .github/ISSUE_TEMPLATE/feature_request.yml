@@ -1,0 +1,38 @@
+name: Feature Request
+description: Propose a new capability or improvement
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the Dynamo workflow or task this would improve.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What would you like BIBIM to do? Be specific — expected inputs, outputs, behavior.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - Code generation quality
+        - Graph analysis
+        - RAG / context
+        - UI / panel
+        - Build / install
+        - Other
+    validations:
+      required: true

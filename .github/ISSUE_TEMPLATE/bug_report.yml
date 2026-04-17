@@ -1,0 +1,64 @@
+name: Bug Report
+description: Something isn't working
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing: check the Dynamo journal log at `%LOCALAPPDATA%\Autodesk\Revit\...\Journals\` — it usually has the reason.
+
+  - type: dropdown
+    id: revit_version
+    attributes:
+      label: Revit version
+      options:
+        - "2022"
+        - "2023"
+        - "2024"
+        - "2025"
+        - "2026"
+        - "2027"
+    validations:
+      required: true
+
+  - type: input
+    id: dynamo_version
+    attributes:
+      label: Dynamo version
+      placeholder: "e.g. 3.3.0"
+    validations:
+      required: true
+
+  - type: input
+    id: bibim_version
+    attributes:
+      label: BIBIM version
+      placeholder: "e.g. 1.0.0"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened
+      description: What did you do, what did you expect, what actually happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open Revit / Dynamo with ...
+        2. Open BIBIM chat
+        3. Send message "..."
+        4. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: journal
+    attributes:
+      label: Journal log excerpt (if applicable)
+      render: text
