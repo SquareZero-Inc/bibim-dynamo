@@ -1,3 +1,4 @@
+// Copyright (c) 2026 SquareZero Inc. - Licensed under Apache 2.0. See LICENSE in the repo root.
 using System;
 using System.Windows;
 using System.Windows.Controls;
@@ -136,6 +137,46 @@ namespace BIBIM_MVP
                     LocalizationService.Format("Extension_WindowOpenError", ex.Message),
                     LocalizationService.Get("Common_ErrorTitle"));
             }
+        }
+
+        /// <summary>
+        /// Shows an update notification dialog. Returns true if the user chose to download.
+        /// For mandatory updates, shows blocking text; for optional, offers dismiss.
+        /// </summary>
+        private static bool ShowUpdateDialog(VersionCheckResult result, Window owner)
+        {
+            string title = result.IsMandatory
+                ? LocalizationService.Get("Update_WindowTitle")
+                : "BIBIM — " + LocalizationService.Get("Update_LatestVersion") + result.LatestVersion;
+
+            string notes = string.IsNullOrWhiteSpace(result.ReleaseNotes)
+                ? LocalizationService.Get("Update_DefaultReleaseNotes")
+                : result.ReleaseNotes;
+            // Strip [MANDATORY] marker from displayed release notes
+            notes = Regex.Replace(notes, @"\[MANDATORY\]\s*", "", RegexOptions.IgnoreCase).Trim();
+
+            string body = LocalizationService.Get("Update_CurrentVersion") + result.CurrentVersion + "
+"
+                        + LocalizationService.Get("Update_LatestVersion") + result.LatestVersion + "
+
+"
+                        + (result.IsMandatory ? LocalizationService.Get("Update_Message") + "
+
+" : "")
+                        + LocalizationService.Get("Update_ReleaseNotes") + ":
+" + notes;
+
+            var buttons = result.IsMandatory ? MessageBoxButton.OK : MessageBoxButton.YesNo;
+            var icon = result.IsMandatory ? MessageBoxImage.Warning : MessageBoxImage.Information;
+
+            // Append download prompt for non-mandatory
+            if (!result.IsMandatory)
+                body += "
+
+" + LocalizationService.Get("Update_ButtonInstall") + "?";
+
+            var mbResult = System.Windows.MessageBox.Show(body, title, buttons, icon);
+            return result.IsMandatory || mbResult == MessageBoxResult.Yes;
         }
 
         public void Shutdown() => Log("Shutdown called");

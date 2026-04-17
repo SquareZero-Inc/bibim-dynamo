@@ -1,3 +1,4 @@
+// Copyright (c) 2026 SquareZero Inc. - Licensed under Apache 2.0. See LICENSE in the repo root.
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -48,7 +49,7 @@ namespace BIBIM_MVP
         private static readonly Dictionary<string, RagFetchResult> _ragCache =
             new Dictionary<string, RagFetchResult>(StringComparer.Ordinal);
         private static readonly object _ragCacheLock = new object();
-        private static readonly Regex _pascalCaseRegex = new Regex(@"\b([A-Z][a-z]+(?:[A-Z][a-z]+)+)\b", RegexOptions.Compiled);
+        private static readonly Regex _pascalCaseRegex = new Regex(@"([A-Z][a-z]+(?:[A-Z][a-z]+)+)", RegexOptions.Compiled);
 
         // ── Cache management ─────────────────────────────────────────────────
 
@@ -93,7 +94,8 @@ namespace BIBIM_MVP
                 string queryPreview = specificationText.Length > 200
                     ? specificationText.Substring(0, 200) + "..."
                     : specificationText;
-                Logger.Log("RagService", $"[RAG_QUERY] rid={requestId} store={ragStoreName} revit={revitVersion} query_preview={queryPreview.Replace("\n", " ")}");
+                Logger.Log("RagService", $"[RAG_QUERY] rid={requestId} store={ragStoreName} revit={revitVersion} query_preview={queryPreview.Replace("
+", " ")}");
 
                 string requestUrl = $"{GeminiApiBaseUrl}{model}:generateContent?key={apiKey}";
                 string queryPrompt = RagQueryPrompt.Build(revitVersion, specificationText);
@@ -179,7 +181,8 @@ namespace BIBIM_MVP
                             return new RagFetchResult { Status = "no_match" };
                         }
                         string resultPreview = result.Length > 500 ? result.Substring(0, 500) + "..." : result;
-                        Logger.Log("RagService", $"[RAG_RESULT] rid={requestId} status=hit length={result.Length} preview={resultPreview.Replace("\n", " | ")}");
+                        Logger.Log("RagService", $"[RAG_RESULT] rid={requestId} status=hit length={result.Length} preview={resultPreview.Replace("
+", " | ")}");
                         return new RagFetchResult { ContextText = result, Status = "hit" };
                     }
                 }
@@ -205,7 +208,8 @@ namespace BIBIM_MVP
                                 return new RagFetchResult { Status = "no_match" };
                             }
                             string resultPreview = result.Length > 500 ? result.Substring(0, 500) + "..." : result;
-                            Logger.Log("RagService", $"[RAG_RESULT] rid={requestId} status=hit length={result.Length} preview={resultPreview.Replace("\n", " | ")}");
+                            Logger.Log("RagService", $"[RAG_RESULT] rid={requestId} status=hit length={result.Length} preview={resultPreview.Replace("
+", " | ")}");
                             return new RagFetchResult { ContextText = result, Status = "hit" };
                         }
                     }
@@ -473,7 +477,8 @@ namespace BIBIM_MVP
         private static string ClipForLog(string text, int maxLen = 180)
         {
             if (string.IsNullOrEmpty(text)) return "";
-            string normalized = text.Replace("\r", " ").Replace("\n", " ");
+            string normalized = text.Replace("", " ").Replace("
+", " ");
             return normalized.Length <= maxLen ? normalized : normalized.Substring(0, maxLen) + "...";
         }
     }

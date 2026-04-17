@@ -1,3 +1,4 @@
+// Copyright (c) 2026 SquareZero Inc. - Licensed under Apache 2.0. See LICENSE in the repo root.
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -28,7 +29,8 @@ namespace BIBIM_MVP
         private static string ClipForLog(string text, int maxLen = 180)
         {
             if (string.IsNullOrEmpty(text)) return "";
-            string normalized = text.Replace("\r", " ").Replace("\n", " ");
+            string normalized = text.Replace("", " ").Replace("
+", " ");
             if (normalized.Length <= maxLen) return normalized;
             return normalized.Substring(0, maxLen) + "...";
         }
@@ -130,7 +132,8 @@ namespace BIBIM_MVP
                     Logger.Log("GeminiService", $"[VALIDATION] rid={requestId} local/autofix applied attempts={attemptedFixes}");
 
                     if (!string.IsNullOrWhiteSpace(guideSection))
-                        return $"TYPE: CODE|{outputCode}\n{guideSection}";
+                        return $"TYPE: CODE|{outputCode}
+{guideSection}";
 
                     return $"TYPE: CODE|{outputCode}";
                 }
@@ -301,7 +304,8 @@ namespace BIBIM_MVP
             if (!trimmed.StartsWith("```", StringComparison.Ordinal))
                 return trimmed;
 
-            int firstLineBreak = trimmed.IndexOf('\n');
+            int firstLineBreak = trimmed.IndexOf('
+');
             if (firstLineBreak < 0)
                 return trimmed.Replace("```", "").Trim();
 
@@ -358,7 +362,8 @@ namespace BIBIM_MVP
                     continue;
 
                 // Extract diagnostic findings from actual Analysis response format
-                var lines = text.Split('\n');
+                var lines = text.Split('
+');
                 var findings = new List<string>();
                 string currentSection = null;
                 string currentError = null;
@@ -490,7 +495,8 @@ namespace BIBIM_MVP
                 if (!hasRelevantKeyword)
                     continue;
 
-                analyses.Add(string.Join("\n", findings));
+                analyses.Add(string.Join("
+", findings));
             }
 
             if (analyses.Count == 0)
@@ -660,7 +666,8 @@ namespace BIBIM_MVP
                         codeSection = initialResponse.Substring(codeStart).Trim();
                     }
 
-                    int codeLineCount = codeSection.Split('\n').Length;
+                    int codeLineCount = codeSection.Split('
+').Length;
                     // Skip verify for short code OR simple read-only patterns (no Transaction = no side effects)
                     bool isSimpleReadOnly = !codeSection.Contains("Transaction") &&
                                            !codeSection.Contains("Set(") &&
@@ -712,7 +719,8 @@ namespace BIBIM_MVP
                         if (guideStart > 0)
                         {
                             string guideSection = initialResponse.Substring(guideStart);
-                            initialResponse = $"TYPE: CODE|{verifiedCode}\n{guideSection}";
+                            initialResponse = $"TYPE: CODE|{verifiedCode}
+{guideSection}";
                         }
                         else
                         {

@@ -1,3 +1,4 @@
+// Copyright (c) 2026 SquareZero Inc. - Licensed under Apache 2.0. See LICENSE in the repo root.
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -101,7 +102,9 @@ namespace BIBIM_MVP
                     {
                         var errorMsg = await response.Content.ReadAsStringAsync();
                         Logger.Log("ClaudeApiClient", $"[API_ERROR] rid={requestId} status={(int)response.StatusCode} model={model} body={ClipForLog(errorMsg)}");
-                        return $"[API Error] {response.StatusCode}\nModel: {model}\n{errorMsg}";
+                        return $"[API Error] {response.StatusCode}
+Model: {model}
+{errorMsg}";
                     }
 
                     var responseString = await response.Content.ReadAsStringAsync();
@@ -133,7 +136,9 @@ namespace BIBIM_MVP
                             string truncMsg = callType == "graph_analysis"
                                 ? LocalizationService.Get("Analysis_ResponseTruncated")
                                 : LocalizationService.Get("Code_ResponseTruncated");
-                            result = truncMsg + "\n\n" + result;
+                            result = truncMsg + "
+
+" + result;
                         }
                         return result;
                     }
@@ -170,7 +175,9 @@ namespace BIBIM_MVP
                                 string truncMsg = callType == "graph_analysis"
                                     ? LocalizationService.Get("Analysis_ResponseTruncated")
                                     : LocalizationService.Get("Code_ResponseTruncated");
-                                result = truncMsg + "\n\n" + result;
+                                result = truncMsg + "
+
+" + result;
                             }
                             return result;
                         }
@@ -337,7 +344,8 @@ namespace BIBIM_MVP
         private static string ClipForLog(string text, int maxLen = 180)
         {
             if (string.IsNullOrEmpty(text)) return "";
-            string normalized = text.Replace("\r", " ").Replace("\n", " ");
+            string normalized = text.Replace("", " ").Replace("
+", " ");
             return normalized.Length <= maxLen ? normalized : normalized.Substring(0, maxLen) + "...";
         }
     }

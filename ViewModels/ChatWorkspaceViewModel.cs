@@ -1,3 +1,4 @@
+// Copyright (c) 2026 SquareZero Inc. - Licensed under Apache 2.0. See LICENSE in the repo root.
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -577,7 +578,8 @@ namespace BIBIM_MVP
                     _specManager.SetPendingSpec(spec);
 
                     // Flat text used only for history/logging (not for the form)
-                    string questionsText = string.Join("\n", spec.ClarifyingQuestions);
+                    string questionsText = string.Join("
+", spec.ClarifyingQuestions);
                     RecordSuccessfulTurn(userMessage, $"TYPE: QUESTION|{questionsText}");
 
                     // Save AI question to history (new format)
@@ -598,7 +600,9 @@ namespace BIBIM_MVP
                     AppendHtmlMessage(ChatHtmlBuilder.AiBubble(specHtml));
 
                     // Context gets raw JSON (recovery), history gets a readable summary (API context)
-                    string specSummary = $"[SPEC] {spec.OriginalRequest}\nSteps: {string.Join(", ", spec.ProcessingSteps ?? new System.Collections.Generic.List<string>())}\nOutput: {spec.Output?.Description ?? "N/A"}";
+                    string specSummary = $"[SPEC] {spec.OriginalRequest}
+Steps: {string.Join(", ", spec.ProcessingSteps ?? new System.Collections.Generic.List<string>())}
+Output: {spec.Output?.Description ?? "N/A"}";
                     RecordSuccessfulTurn(userMessage, $"SPEC_GENERATED|{specJson}", specSummary);
 
                     // Save spec to history (new format)
@@ -692,7 +696,8 @@ namespace BIBIM_MVP
                     _specManager.SetPendingSpec(revisedSpec);
 
                     // Flat text used only for history/logging (not for the form)
-                    string questionsText = string.Join("\n", revisedSpec.ClarifyingQuestions);
+                    string questionsText = string.Join("
+", revisedSpec.ClarifyingQuestions);
                     RecordSuccessfulTurn(userFeedback, $"TYPE: QUESTION|{questionsText}");
 
                     // Save AI question to history (new format)
@@ -719,7 +724,9 @@ namespace BIBIM_MVP
                 AppendHtmlMessage(ChatHtmlBuilder.AiBubble(specHtml));
 
                 // Context gets raw JSON (recovery), history gets a readable summary (API context)
-                string specSummary = $"[SPEC_REVISED] {revisedSpec.OriginalRequest}\nSteps: {string.Join(", ", revisedSpec.ProcessingSteps ?? new System.Collections.Generic.List<string>())}\nOutput: {revisedSpec.Output?.Description ?? "N/A"}";
+                string specSummary = $"[SPEC_REVISED] {revisedSpec.OriginalRequest}
+Steps: {string.Join(", ", revisedSpec.ProcessingSteps ?? new System.Collections.Generic.List<string>())}
+Output: {revisedSpec.Output?.Description ?? "N/A"}";
                 RecordSuccessfulTurn(userFeedback, $"SPEC_REVISED|{specJson}", specSummary);
 
                 // Save revised spec to history (new format)
@@ -925,7 +932,8 @@ namespace BIBIM_MVP
                     string truncatedStack = ex.StackTrace.Length > 500 
                         ? ex.StackTrace.Substring(0, 500) + "..." 
                         : ex.StackTrace;
-                    Logger.Log("ChatWorkspaceViewModel", $"[API_ERROR] rid={requestId} stack={truncatedStack.Replace("\n", " | ")}");
+                    Logger.Log("ChatWorkspaceViewModel", $"[API_ERROR] rid={requestId} stack={truncatedStack.Replace("
+", " | ")}");
                 }
 
                 // Create retry context (Requirement 1.4)
@@ -1484,7 +1492,8 @@ namespace BIBIM_MVP
                             guideHtml));
                     }
 
-                    int lineCount = cleanedCode.Split('\n').Length;
+                    int lineCount = cleanedCode.Split('
+').Length;
                     AppendHtmlMessage(ChatHtmlBuilder.CodeToggleBubble(
                         EscapeHtmlForCode(cleanedCode),
                         EscapeHtml(LF("ViewModel_ViewGeneratedCode", lineCount)),
@@ -1530,7 +1539,8 @@ namespace BIBIM_MVP
                 .Replace("<", "&lt;")
                 .Replace(">", "&gt;")
                 .Replace("\"", "&quot;")
-                .Replace("\n", "<br/>");
+                .Replace("
+", "<br/>");
         }
 
         /// <summary>
@@ -1544,7 +1554,8 @@ namespace BIBIM_MVP
                 .Replace("<", "&lt;")
                 .Replace(">", "&gt;")
                 .Replace("\"", "&quot;");
-            // NOTE: Do NOT replace \n - pre/code tags need actual newlines
+            // NOTE: Do NOT replace 
+ - pre/code tags need actual newlines
         }
 
         private static readonly Regex _markdownCodePattern = new Regex(
@@ -1568,7 +1579,11 @@ namespace BIBIM_MVP
             else if (importSysIndex >= 0)
                 codeToProcess = codeToProcess.Substring(importSysIndex);
 
-            string[] garbagePatterns = { "\n```", "\n###", "\nTYPE:", "\n## ", "```", "TYPE:" };
+            string[] garbagePatterns = { "
+```", "
+###", "
+TYPE:", "
+## ", "```", "TYPE:" };
             foreach (string pattern in garbagePatterns)
             {
                 int garbageIndex = codeToProcess.IndexOf(pattern);
@@ -2175,7 +2190,8 @@ namespace BIBIM_MVP
                     // Python code if exists (collapsed by default)
                     if (!string.IsNullOrEmpty(msg.PythonCode))
                     {
-                        int historyLineCount = msg.PythonCode.Split('\n').Length;
+                        int historyLineCount = msg.PythonCode.Split('
+').Length;
                         AppendHtmlMessage(ChatHtmlBuilder.CodeToggleBubble(
                             EscapeHtmlForCode(msg.PythonCode),
                             EscapeHtml(LF("ViewModel_ViewGeneratedCode", historyLineCount)),
@@ -2236,7 +2252,8 @@ namespace BIBIM_MVP
                         }
                         if (!string.IsNullOrEmpty(msg.PythonCode))
                         {
-                            int lineCount = msg.PythonCode.Split('\n').Length;
+                            int lineCount = msg.PythonCode.Split('
+').Length;
                             AppendHtmlMessage(ChatHtmlBuilder.CodeToggleBubble(
                                 EscapeHtmlForCode(msg.PythonCode),
                                 EscapeHtml(LF("ViewModel_ViewGeneratedCode", lineCount)),

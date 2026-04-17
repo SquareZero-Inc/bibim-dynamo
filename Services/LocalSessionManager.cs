@@ -1,3 +1,4 @@
+// Copyright (c) 2026 SquareZero Inc. - Licensed under Apache 2.0. See LICENSE in the repo root.
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -284,9 +285,11 @@ namespace BIBIM_MVP
 
             // Remove newlines and carriage returns (Requirement 5.3)
             var cleaned = userPrompt
-                .Replace("\r\n", " ")
-                .Replace("\r", " ")
-                .Replace("\n", " ")
+                .Replace("
+", " ")
+                .Replace("", " ")
+                .Replace("
+", " ")
                 .Trim();
 
             // Truncate to 50 characters with "..." if needed (Requirements 5.1, 5.2)

@@ -1,3 +1,4 @@
+// Copyright (c) 2026 SquareZero Inc. - Licensed under Apache 2.0. See LICENSE in the repo root.
 using System.Web;
 
 namespace BIBIM_MVP
@@ -26,7 +27,8 @@ namespace BIBIM_MVP
                 .Replace("<", "&lt;")
                 .Replace(">", "&gt;")
                 .Replace("\"", "&quot;")
-                .Replace("\n", "<br/>");
+                .Replace("
+", "<br/>");
         }
 
         /// <summary>Escapes text for &lt;pre&gt;&lt;code&gt; blocks (preserves newlines).</summary>

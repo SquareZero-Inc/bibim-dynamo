@@ -1,3 +1,4 @@
+// Copyright (c) 2026 SquareZero Inc. - Licensed under Apache 2.0. See LICENSE in the repo root.
 using System;
 using System.IO;
 
@@ -75,7 +76,8 @@ namespace BIBIM_MVP
         /// </summary>
         public static void LogError(string source, Exception ex)
         {
-            Log(source, $"ERROR: {ex.Message}\n{ex.StackTrace}");
+            Log(source, $"ERROR: {ex.Message}
+{ex.StackTrace}");
         }
 
         /// <summary>

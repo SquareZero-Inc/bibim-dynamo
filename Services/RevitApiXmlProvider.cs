@@ -1,3 +1,4 @@
+// Copyright (c) 2026 SquareZero Inc. - Licensed under Apache 2.0. See LICENSE in the repo root.
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -151,7 +152,8 @@ namespace BIBIM_MVP
             if (string.IsNullOrWhiteSpace(raw))
                 return string.Empty;
 
-            string trimmed = raw.Replace("\r", " ").Replace("\n", " ").Trim();
+            string trimmed = raw.Replace("", " ").Replace("
+", " ").Trim();
             while (trimmed.Contains("  "))
                 trimmed = trimmed.Replace("  ", " ");
 

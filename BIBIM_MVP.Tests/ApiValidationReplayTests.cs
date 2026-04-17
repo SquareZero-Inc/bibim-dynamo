@@ -1,3 +1,4 @@
+// Copyright (c) 2026 SquareZero Inc. - Licensed under Apache 2.0. See LICENSE in the repo root.
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -457,7 +458,10 @@ raise SystemExit
                 .Where(i => i.Severity == ValidationSeverity.Block)
                 .Select(i => $"  BLOCK: [{i.Category}] {i.Symbol} — {i.Message}");
 
-            return message + "\nBlocking issues:\n" + string.Join("\n", blocks);
+            return message + "
+Blocking issues:
+" + string.Join("
+", blocks);
         }
     }
 }

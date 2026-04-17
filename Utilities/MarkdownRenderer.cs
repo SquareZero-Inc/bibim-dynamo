@@ -1,3 +1,4 @@
+// Copyright (c) 2026 SquareZero Inc. - Licensed under Apache 2.0. See LICENSE in the repo root.
 using System;
 using Markdig;
 
@@ -181,7 +182,8 @@ namespace BIBIM_MVP
             {
                 // Fallback: return escaped text if parsing fails
                 return System.Net.WebUtility.HtmlEncode(markdown)
-                    .Replace("\n", "<br/>");
+                    .Replace("
+", "<br/>");
             }
         }
 
@@ -197,13 +199,15 @@ namespace BIBIM_MVP
             try
             {
                 // Remove leading whitespace from each line to prevent any code block detection
-                var lines = markdown.Split('\n');
+                var lines = markdown.Split('
+');
                 var normalizedLines = new System.Collections.Generic.List<string>();
                 foreach (var line in lines)
                 {
                     normalizedLines.Add(line.TrimStart());
                 }
-                string normalized = string.Join("\n", normalizedLines);
+                string normalized = string.Join("
+", normalizedLines);
                 
                 // Ensure blank lines around tables
                 string preprocessed = EnsureBlankLinesAroundTables(normalized);
@@ -215,7 +219,8 @@ namespace BIBIM_MVP
             {
                 // Fallback: return escaped text if parsing fails
                 return System.Net.WebUtility.HtmlEncode(markdown)
-                    .Replace("\n", "<br/>");
+                    .Replace("
+", "<br/>");
             }
         }
 
@@ -226,7 +231,8 @@ namespace BIBIM_MVP
         /// </summary>
         private static string EnsureBlankLinesAroundTables(string markdown)
         {
-            var lines = markdown.Split('\n');
+            var lines = markdown.Split('
+');
             var result = new System.Text.StringBuilder();
 
             for (int i = 0; i < lines.Length; i++)
@@ -326,7 +332,8 @@ namespace BIBIM_MVP
         public static string RenderUserMessage(string message)
         {
             string escaped = System.Net.WebUtility.HtmlEncode(message ?? string.Empty)
-                .Replace("\n", "<br/>");
+                .Replace("
+", "<br/>");
             
             return $@"<!DOCTYPE html>
 <html>

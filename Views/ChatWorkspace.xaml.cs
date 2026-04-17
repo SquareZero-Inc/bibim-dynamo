@@ -1,3 +1,4 @@
+// Copyright (c) 2026 SquareZero Inc. - Licensed under Apache 2.0. See LICENSE in the repo root.
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -1025,7 +1026,8 @@ function toggleCode(header) {{
             }
             catch
             {
-                return $"<p>{System.Net.WebUtility.HtmlEncode(markdown).Replace("\n", "<br/>")}</p>";
+                return $"<p>{System.Net.WebUtility.HtmlEncode(markdown).Replace("
+", "<br/>")}</p>";
             }
         }
 

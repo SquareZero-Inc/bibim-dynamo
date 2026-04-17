@@ -1,3 +1,4 @@
+// Copyright (c) 2026 SquareZero Inc. - Licensed under Apache 2.0. See LICENSE in the repo root.
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -605,7 +606,8 @@ namespace BIBIM_MVP
 
                 scriptProp.SetValue(node, newCode);
 
-                int lineCount = newCode.Split('\n').Length;
+                int lineCount = newCode.Split('
+').Length;
                 details = LocalizationService.Format("NodeManipulator_CodeReplaceSuccess", lineCount);
                 return true;
             }
@@ -1107,7 +1109,8 @@ namespace BIBIM_MVP
             }
             catch (Exception ex)
             {
-                Log($"[CreateNode] ERROR: {ex.Message}\nStackTrace: {ex.StackTrace}");
+                Log($"[CreateNode] ERROR: {ex.Message}
+StackTrace: {ex.StackTrace}");
                 return false;
             }
         }
@@ -1437,7 +1440,8 @@ namespace BIBIM_MVP
             }
             catch (Exception ex)
             {
-                Logger.Log("NodeManipulator", $"Failed to add input ports: {ex.Message}\nStackTrace: {ex.StackTrace}");
+                Logger.Log("NodeManipulator", $"Failed to add input ports: {ex.Message}
+StackTrace: {ex.StackTrace}");
                 return false;
             }
         }

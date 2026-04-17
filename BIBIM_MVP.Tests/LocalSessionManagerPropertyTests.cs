@@ -1,3 +1,4 @@
+// Copyright (c) 2026 SquareZero Inc. - Licensed under Apache 2.0. See LICENSE in the repo root.
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -313,7 +314,8 @@ namespace BIBIM_MVP.Tests
         /// Property 7: Title Generation Rules
         /// For any user prompt, the generated session title should:
         /// - Be at most 50 characters
-        /// - Not contain newline (\n) or carriage return (\r) characters
+        /// - Not contain newline (
+) or carriage return () characters
         /// - End with "..." if the original prompt was longer than 50 characters
         /// Validates: Requirements 5.1, 5.2, 5.3
         /// </summary>
@@ -330,10 +332,13 @@ namespace BIBIM_MVP.Tests
                     var lengthOk = title.Length <= 50;
                     
                     // Rule 2: No newlines or carriage returns
-                    var noNewlines = !title.Contains("\n") && !title.Contains("\r");
+                    var noNewlines = !title.Contains("
+") && !title.Contains("");
                     
                     // Rule 3: Ends with "..." if original was longer than 50 chars
-                    var cleanedPrompt = prompt.Get.Replace("\r\n", " ").Replace("\r", " ").Replace("\n", " ").Trim();
+                    var cleanedPrompt = prompt.Get.Replace("
+", " ").Replace("", " ").Replace("
+", " ").Trim();
                     var ellipsisOk = cleanedPrompt.Length <= 50 || title.EndsWith("...");
 
                     return lengthOk && noNewlines && ellipsisOk;
