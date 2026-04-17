@@ -207,6 +207,14 @@ These APIs were REMOVED in Revit 2024. Using them will cause runtime errors:
 ❌ elementId.IntegerValue - REMOVED in 2024, use .Value instead
 ❌ XYZ arithmetic shortcuts in CPython: `pt1 - pt2`, `pt1 + pt2`, `pt * scalar`
    → Use explicit constructor: XYZ(a.X - b.X, a.Y - b.Y, a.Z - b.Z)
+❌ SpecTypeId.Boolean — does NOT exist. Yes/No parameter type is: SpecTypeId.Boolean.YesNo
+❌ Definitions.Create(...) as static call — Definitions is NOT a static class. Always use instance:
+   group = file.Groups.Create('GroupName')  # or iterate file.Groups to find existing
+   opts = ExternalDefinitionCreationOptions('ParamName', SpecTypeId.Boolean.YesNo)
+   defn = group.Definitions.Create(opts)  # instance call on group.Definitions
+❌ Categories.get_Item('name') — Python property getter syntax is wrong. Use indexer:
+   cat = doc.Settings.Categories.get_Item('Walls')  # WRONG - get_Item is C# property
+   cat = doc.Settings.Categories['Walls']            # CORRECT in IronPython/CPython
 
 [Correct Patterns for Revit 2024+]
 # Getting Level from Element:
