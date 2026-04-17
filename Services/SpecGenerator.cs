@@ -667,6 +667,12 @@ TYPE: SPEC|
                 if (spec.ClarifyingQuestionsStructured == null) spec.ClarifyingQuestionsStructured = new List<ClarifyingQuestion>();
 
                 Log($"ParseSpecificationResponse: Parsed spec with {spec.Inputs.Count} inputs, {spec.ProcessingSteps.Count} steps, {spec.ClarifyingQuestions.Count} questions");
+                // Log option counts per question for debugging
+                for (int qi = 0; qi < spec.ClarifyingQuestionsStructured.Count; qi++)
+                {
+                    var cq = spec.ClarifyingQuestionsStructured[qi];
+                    Log($"  Q{qi+1} options={cq.Options?.Count ?? 0}: {cq.Question?.Substring(0, System.Math.Min(60, cq.Question?.Length ?? 0))}");
+                }
                 return spec;
             }
             catch (Exception ex)
