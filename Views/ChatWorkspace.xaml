@@ -183,11 +183,95 @@
         <Grid Grid.Row="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
-            
+
+            <!-- Update Banner -->
+            <Border Grid.Row="0"
+                    Visibility="{Binding IsUpdateAvailable, Converter={StaticResource BoolToVis}}"
+                    Padding="12,10">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Background" Value="#007ACC"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsMandatoryUpdate}" Value="True">
+                                <Setter Property="Background" Value="#C62828"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0"
+                               Text="{Binding UpdateBannerText}"
+                               Foreground="White" FontSize="12"
+                               VerticalAlignment="Center" TextWrapping="Wrap"/>
+                    <Button Grid.Column="1"
+                            Command="{Binding DownloadUpdateCommand}"
+                            Cursor="Hand" Margin="8,0,4,0"
+                            Background="White" Foreground="#007ACC"
+                            BorderThickness="0" Padding="10,4"
+                            FontSize="12" FontWeight="SemiBold">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Background" Value="White"/>
+                                <Setter Property="Foreground" Value="#007ACC"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                                    CornerRadius="4" Padding="{TemplateBinding Padding}">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Bd" Property="Opacity" Value="0.85"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                        <TextBlock Text="{loc:Loc Update_BannerDownload}"/>
+                    </Button>
+                    <Button Grid.Column="2"
+                            Command="{Binding DismissUpdateCommand}"
+                            Cursor="Hand" Padding="6,4"
+                            Background="Transparent" BorderThickness="0"
+                            FontSize="12" Foreground="White"
+                            Visibility="{Binding IsOptionalUpdate, Converter={StaticResource BoolToVis}}">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="Bd" Background="Transparent"
+                                                    CornerRadius="4" Padding="{TemplateBinding Padding}">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Bd" Property="Background" Value="#33FFFFFF"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                        <TextBlock Text="{loc:Loc Update_BannerDismiss}"/>
+                    </Button>
+                </Grid>
+            </Border>
+
             <!-- Version Warning Banner (WPF overlay - always on top) -->
-            <Border x:Name="VersionWarningBanner" Grid.Row="0" 
+            <Border x:Name="VersionWarningBanner" Grid.Row="1"
                     Background="#FF9800" Visibility="Collapsed" Padding="12,10">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -201,12 +285,12 @@
                 </Grid>
             </Border>
             
-            <Grid Grid.Row="1">
+            <Grid Grid.Row="2">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                
+
                 <WebBrowser x:Name="ChatBrowser" Grid.Row="0" 
                             Navigating="ChatBrowser_Navigating" 
                             Loaded="ChatBrowser_Loaded"

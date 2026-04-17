@@ -128,6 +128,32 @@ namespace BIBIM_MVP
             set { _isRetryButtonVisible = value; OnPropertyChanged(); }
         }
 
+        private bool _isUpdateAvailable;
+        public bool IsUpdateAvailable
+        {
+            get => _isUpdateAvailable;
+            set { _isUpdateAvailable = value; OnPropertyChanged(); }
+        }
+
+        private bool _isMandatoryUpdate;
+        public bool IsMandatoryUpdate
+        {
+            get => _isMandatoryUpdate;
+            set { _isMandatoryUpdate = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsOptionalUpdate)); }
+        }
+
+        private string _updateBannerText;
+        public string UpdateBannerText
+        {
+            get => _updateBannerText;
+            set { _updateBannerText = value; OnPropertyChanged(); }
+        }
+
+        private string _updateDownloadUrl;
+
+        /// <summary>Used to hide the Dismiss button on mandatory updates.</summary>
+        public bool IsOptionalUpdate => !_isMandatoryUpdate;
+
         #endregion
 
         #region Commands
@@ -160,6 +186,9 @@ namespace BIBIM_MVP
         /// Command to cancel ongoing API request.
         /// </summary>
         public ICommand CancelCommand { get; }
+
+        public ICommand DismissUpdateCommand { get; }
+        public ICommand DownloadUpdateCommand { get; }
 
         #endregion
 
@@ -194,6 +223,26 @@ namespace BIBIM_MVP
 
             // Initialize cancel command
             CancelCommand = new RelayCommand((obj) => { CancelRequest(); return Task.CompletedTask; }, (obj) => IsBusy);
+
+            DismissUpdateCommand = new RelayCommand((obj) => { IsUpdateAvailable = false; return Task.CompletedTask; });
+            DownloadUpdateCommand = new RelayCommand((obj) =>
+            {
+                if (!string.IsNullOrEmpty(_updateDownloadUrl))
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = _updateDownloadUrl,
+                        UseShellExecute = true
+                    });
+                return Task.CompletedTask;
+            });
+
+            // Check if startup version check already completed before this window opened
+            var pendingUpdate = BIBIM_Extension.LastVersionCheckResult;
+            if (pendingUpdate?.UpdateRequired == true)
+                ApplyUpdateInfo(pendingUpdate);
+
+            // Subscribe for late-arriving check result (fires from background thread)
+            BIBIM_Extension.VersionCheckCompleted += OnVersionCheckCompleted;
 
             // Start with a new session
             StartNewChat();
@@ -2237,8 +2286,27 @@ namespace BIBIM_MVP
         internal void Cleanup()
         {
             _specManager.SpecStateChanged -= OnSpecStateChanged;
+            BIBIM_Extension.VersionCheckCompleted -= OnVersionCheckCompleted;
             _requestCts?.Dispose();
             _loadingCts?.Dispose();
+        }
+
+        private void OnVersionCheckCompleted(VersionCheckResult result)
+        {
+            // Fired from background thread — dispatch to WPF UI thread
+            System.Windows.Application.Current?.Dispatcher?.BeginInvoke(
+                new Action(() => ApplyUpdateInfo(result)));
+        }
+
+        private void ApplyUpdateInfo(VersionCheckResult result)
+        {
+            if (result?.UpdateRequired != true) return;
+            _updateDownloadUrl = result.DownloadUrl;
+            IsMandatoryUpdate = result.IsMandatory;
+            UpdateBannerText = result.IsMandatory
+                ? LF("Update_BannerMandatory", result.LatestVersion)
+                : LF("Update_BannerAvailable", result.LatestVersion);
+            IsUpdateAvailable = true;
         }
 
         #region INotifyPropertyChanged

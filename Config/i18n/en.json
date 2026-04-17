@@ -44,6 +44,10 @@
   "Update_DownloadError": "An error occurred during download.\nTrying browser download instead.\n\nError: {0}",
   "Update_DownloadErrorTitle": "Download Error",
   "Update_ProgressFormat": "Downloading... {0:F1} / {1:F1} MB ({2}%)",
+  "Update_BannerAvailable": "New version v{0} is available.",
+  "Update_BannerMandatory": "Required update: v{0}. Update is required to continue.",
+  "Update_BannerDownload": "Download",
+  "Update_BannerDismiss": "Later",
 
   "Chat_MenuCopy": "Copy (Ctrl+C)",
   "Chat_MenuSelectAll": "Select all (Ctrl+A)",

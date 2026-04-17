@@ -44,6 +44,10 @@
   "Update_DownloadError": "다운로드 중 오류가 발생했습니다.\n브라우저에서 다운로드를 시도합니다.\n\n오류: {0}",
   "Update_DownloadErrorTitle": "다운로드 오류",
   "Update_ProgressFormat": "다운로드 중... {0:F1} / {1:F1} MB ({2}%)",
+  "Update_BannerAvailable": "새 버전 v{0}이 출시되었습니다.",
+  "Update_BannerMandatory": "필수 업데이트: v{0}. 계속 사용하려면 업데이트가 필요합니다.",
+  "Update_BannerDownload": "다운로드",
+  "Update_BannerDismiss": "나중에",
 
   "Chat_MenuCopy": "복사 (Ctrl+C)",
   "Chat_MenuSelectAll": "전체 선택 (Ctrl+A)",

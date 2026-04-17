@@ -556,58 +556,9 @@ namespace BIBIM_MVP
                 string apiDocContext = "";
                 bool ragFailed = false;
                 string ragFailReason = "";
-                int ragTimeoutSeconds = config.RagTimeoutSeconds > 0 ? config.RagTimeoutSeconds : 25;
-                if (isSpecBasedRequest && !string.IsNullOrEmpty(geminiApiKey) && !string.IsNullOrEmpty(ragStore))
-                {
-                    onProgress?.Invoke("rag");
-                    var ragSw = Stopwatch.StartNew();
-
-                    // Build cache key from store + extracted keywords (more stable than full spec text)
-                    string ragCacheKey = RagService.BuildCacheKey(ragStore, lastUserMessage);
-                    RagFetchResult ragResult;
-                    bool cacheHit = RagService.TryGetCache(ragCacheKey, out ragResult);
-
-                    if (cacheHit)
-                    {
-                        Logger.Log("GeminiService", $"[RAG_CACHE_HIT] rid={requestId} key_len={ragCacheKey.Length}");
-                    }
-                    else
-                    {
-                        // First attempt: full spec text for maximum context
-                        ragResult = await RagService.FetchRelevantApiDocsAsync(geminiApiKey, lastUserMessage, ragStore, revitVersion, geminiModel, requestId, ragTimeoutSeconds);
-
-                        // Retry with keyword-only query (more focused, different angle)
-                        if (!ragResult.HasContext && ragResult.Status != "no_match")
-                        {
-                            string keywordQuery = RagService.ExtractRagKeywords(lastUserMessage);
-                            Logger.Log("GeminiService", $"[RAG_RETRY] rid={requestId} first_status={ragResult.Status}, retrying with keywords: {ClipForLog(keywordQuery, 120)}");
-                            ragResult = await RagService.FetchRelevantApiDocsAsync(geminiApiKey, keywordQuery, ragStore, revitVersion, geminiModel, requestId, ragTimeoutSeconds);
-                            if (!ragResult.HasContext)
-                            {
-                                Logger.Log("GeminiService", $"[RAG_RETRY] rid={requestId} second_status={ragResult.Status}, proceeding without RAG");
-                            }
-                        }
-
-                        // Fallback store retry: if primary store fails and a fallback is configured (e.g. R2027 → R2026)
-                        if (!ragResult.HasContext && !string.IsNullOrEmpty(ragFallbackStore) && ragFallbackStore != ragStore)
-                        {
-                            Logger.Log("GeminiService", $"[RAG_FALLBACK] rid={requestId} primary_store_failed status={ragResult.Status}, retrying with fallback store");
-                            ragResult = await RagService.FetchRelevantApiDocsAsync(geminiApiKey, lastUserMessage, ragFallbackStore, revitVersion, geminiModel, requestId, ragTimeoutSeconds);
-                            if (ragResult.HasContext)
-                                Logger.Log("GeminiService", $"[RAG_FALLBACK] rid={requestId} fallback succeeded");
-                        }
-
-                        // Cache successful results for this session
-                        if (ragResult.HasContext)
-                            RagService.SetCache(ragCacheKey, ragResult);
-                    }
-
-                    apiDocContext = ragResult.ContextText;
-                    ragFailed = !ragResult.HasContext && ragResult.Status != "no_match";
-                    ragFailReason = ragResult.ErrorSummary;
-                    ragSw.Stop();
-                    LogPerf(requestId, "rag", ragSw.ElapsedMilliseconds, cacheHit ? "cache_hit" : ragResult.Status);
-                }
+                // RAG disabled in OSS release — RagService code retained for future re-enablement.
+                // Store access requires rework after OSS transition; see README for details.
+                Logger.Log("GeminiService", $"[RAG_DISABLED] rid={requestId} skipping RAG fetch (OSS release)");
                 
                 // Extract previous Graph Analysis context for code generation
                 string analysisContext = "";

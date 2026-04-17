@@ -14,6 +14,17 @@ namespace BIBIM_MVP
         private System.Windows.Controls.MenuItem _menuItem;
         private ViewLoadedParams _viewLoadedParams;
 
+        /// <summary>
+        /// Cached result of the startup version check. Null if no update needed or not yet checked.
+        /// </summary>
+        internal static VersionCheckResult LastVersionCheckResult { get; private set; }
+
+        /// <summary>
+        /// Fired on a background thread when the startup version check finds a newer version.
+        /// Subscribers must be thread-safe (dispatch to UI thread as needed).
+        /// </summary>
+        internal static event Action<VersionCheckResult> VersionCheckCompleted;
+
         public void Startup(ViewStartupParams p)
         {
             Log("Startup called");
@@ -39,22 +50,40 @@ namespace BIBIM_MVP
             Log("Loaded called");
             _viewLoadedParams = p;
 
+            // Fire-and-forget version check at startup
+            Task.Run(async () =>
+            {
+                try
+                {
+                    var result = await VersionChecker.Instance.CheckForUpdatesAsync();
+                    if (result.UpdateRequired)
+                    {
+                        LastVersionCheckResult = result;
+                        Log($"Update available: {result.LatestVersion} (mandatory={result.IsMandatory})");
+                        VersionCheckCompleted?.Invoke(result);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log($"Version check failed (non-fatal): {ex.Message}");
+                }
+            });
+
             try
             {
                 _menuItem = new System.Windows.Controls.MenuItem { Header = LocalizationService.Get("Extension_OpenChatMenu") };
-                _menuItem.Click += async (sender, args) =>
+                _menuItem.Click += (sender, args) =>
                 {
                     try
                     {
                         Log("Menu item clicked");
 
-                        // Version check via GitHub Releases
-                        var versionResult = await VersionChecker.Instance.CheckForUpdatesAsync();
-                        if (versionResult.UpdateRequired && versionResult.IsMandatory)
+                        // Use cached result — startup check already ran in background
+                        if (LastVersionCheckResult?.UpdateRequired == true && LastVersionCheckResult.IsMandatory)
                         {
-                            Log($"Mandatory update required: {versionResult.CurrentVersion} -> {versionResult.LatestVersion}");
+                            Log($"Mandatory update required: {LastVersionCheckResult.CurrentVersion} -> {LastVersionCheckResult.LatestVersion}");
                             System.Windows.MessageBox.Show(
-                                $"Update required: {versionResult.LatestVersion}",
+                                $"Update required: {LastVersionCheckResult.LatestVersion}",
                                 "BIBIM Update",
                                 MessageBoxButton.OK,
                                 MessageBoxImage.Information);

@@ -13,7 +13,7 @@ Generate and analyze Dynamo Python scripts using natural language — powered by
 
 - **Code Generation**: Describe what you want in natural language → get ready-to-run Dynamo Python code
 - **Graph Analysis**: Analyze existing Dynamo graphs and get improvement suggestions
-- **RAG (optional)**: Revit API documentation lookup via Gemini for higher accuracy code
+- **RAG (coming soon)**: Revit API documentation lookup via Gemini — temporarily disabled in OSS release
 - **Multi-version**: Supports Revit 2022–2027 / Dynamo 2.x–4.x
 
 ---
@@ -22,7 +22,7 @@ Generate and analyze Dynamo Python scripts using natural language — powered by
 
 - Autodesk Revit 2022 or later with Dynamo installed
 - An [Anthropic API key](https://console.anthropic.com/) (required)
-- A [Google Gemini API key](https://aistudio.google.com/apikey) (optional — enables RAG)
+- A [Google Gemini API key](https://aistudio.google.com/apikey) (optional — for RAG, coming soon)
 
 ---
 
@@ -46,20 +46,15 @@ API key format: sk-ant-api03-...
 Get one at: https://console.anthropic.com/
 ```
 
-### 3. (Optional) Add Gemini key for RAG
+### 3. RAG (Revit API doc search) — coming soon
 
-If you add a Google Gemini API key, BIBIM will attempt to use Gemini's file search  
-to look up Revit API documentation before generating code.
+RAG (Gemini fileSearch) is **temporarily disabled** in this OSS release.
 
-> **Note for OSS builds**: RAG requires access to a Gemini File Search corpus containing  
-> Revit API docs. The official BIBIM release uses a SquareZero-hosted corpus (not publicly  
-> accessible). If you are building from source, RAG calls will silently fail and BIBIM will  
-> fall back to Claude-only generation. You can host your own corpus in Google AI Studio  
-> and set `active_store` in `rag_config.json` to point to it.
+**Why:** The RAG corpus (Revit API docs indexed per version) was hosted under a private SquareZero Google Cloud project. The Gemini fileSearch store is project-scoped — a user's own Gemini key cannot access another project's store. During the OSS transition, the store access model is being reworked.
 
-```
-Get a free Gemini key at: https://aistudio.google.com/apikey
-```
+**Impact:** Code generation works normally. Claude's built-in Revit API knowledge combined with the local validation + auto-fix loop handles the vast majority of cases well.
+
+**Coming soon:** A public RAG endpoint or self-hostable corpus setup will be added in an upcoming release. The Gemini key input in Settings is greyed out until then.
 
 ---
 
@@ -77,15 +72,9 @@ Open **⚙ Settings → API Key Settings** to select your models.
 
 **Recommended: `claude-sonnet-4-6`** — best balance of quality, speed, and cost.
 
-### Gemini (RAG — optional)
+### Gemini (RAG — coming soon)
 
-| Model | RAG Quality | Cost / session* |
-|-------|-------------|-----------------|
-| **gemini-2.5-flash-lite** ★ | ○ Good | ~$0.001 |
-| gemini-2.5-pro | ◎ Best | ~$0.008 |
-| gemini-3.1-pro-preview | ◎◎ Highest | ~$0.02 |
-
-**Recommended: `gemini-2.5-flash-lite`** — fast and cheap. Upgrade to 2.5-pro if you need higher accuracy.
+RAG is temporarily disabled. Gemini model selection will be re-enabled in a future release.
 
 > \* Estimated per code generation request (~7,000 input / 2,000 output tokens for Claude).  
 > Actual cost depends on prompt complexity and conversation length.  

@@ -123,29 +123,27 @@
         <!-- Separator -->
         <Separator Grid.Row="5" Background="#3E3E42" Margin="0,16,0,16"/>
 
-        <!-- ── Gemini ─────────────────────────────── -->
-        <DockPanel Grid.Row="6" Margin="0,0,0,5">
+        <!-- ── Gemini (RAG — coming soon) ──────────── -->
+        <DockPanel Grid.Row="6" Margin="0,0,0,5" Opacity="0.45">
             <TextBlock Text="Google Gemini" Style="{StaticResource SectionTitle}" Margin="0" VerticalAlignment="Center"/>
-            <TextBlock Text="Optional" Foreground="#5CAF5C" FontSize="11"
+            <TextBlock Text="Coming soon" Foreground="#888888" FontSize="11"
                        FontFamily="Pretendard, Malgun Gothic, Segoe UI"
                        Margin="8,0,0,0" VerticalAlignment="Center"/>
         </DockPanel>
 
-        <TextBlock Grid.Row="7" Style="{StaticResource DescText}">
-            Enables RAG (Revit API docs lookup) · <Hyperlink NavigateUri="https://aistudio.google.com/apikey" RequestNavigate="Hyperlink_RequestNavigate">
-                <Run Text="aistudio.google.com/apikey" Foreground="#4EA8DE"/>
-            </Hyperlink>
+        <TextBlock Grid.Row="7" Style="{StaticResource DescText}" Opacity="0.55" TextWrapping="Wrap">
+            RAG (Revit API docs lookup) is temporarily disabled while the store access is being reworked for the OSS release. Code generation works normally without it. Update coming soon.
         </TextBlock>
 
         <PasswordBox x:Name="GeminiApiKeyBox" Grid.Row="8"
                      Background="#2D2D30" Foreground="#E1E1E1" CaretBrush="#E1E1E1"
                      BorderBrush="#3E3E42" BorderThickness="1"
                      Padding="10,8" FontSize="13" Margin="0,0,0,8"
-                     PasswordChanged="GeminiKey_Changed"/>
+                     IsEnabled="False" Opacity="0.45"/>
 
         <ComboBox x:Name="GeminiModelCombo" Grid.Row="9"
                   Style="{StaticResource DarkCombo}"
-                  IsEnabled="False">
+                  IsEnabled="False" Opacity="0.45">
             <ComboBoxItem Tag="gemini-2.5-flash-lite"
                           Content="gemini-2.5-flash-lite  —  Fast &amp; cheap  ★ Recommended"
                           IsSelected="True"/>
