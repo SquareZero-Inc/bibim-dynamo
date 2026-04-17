@@ -72,7 +72,7 @@ Open **⚙ Settings → API Key Settings** to select your models.
 | Model | Quality | Speed | Cost / session* |
 |-------|---------|-------|-----------------|
 | **claude-sonnet-4-6** ★ | ◎ Excellent | ◎ Fast | ~$0.05 |
-| claude-opus-4-6 | ◎◎ Best | △ Slower | ~$0.25 |
+| claude-opus-4-7 | ◎◎ Best | △ Slower | ~$0.28 |
 | claude-haiku-4-5 | ○ Good | ◎◎ Fastest | ~$0.01 |
 
 **Recommended: `claude-sonnet-4-6`** — best balance of quality, speed, and cost.
@@ -81,10 +81,11 @@ Open **⚙ Settings → API Key Settings** to select your models.
 
 | Model | RAG Quality | Cost / session* |
 |-------|-------------|-----------------|
-| **gemini-2.0-flash** ★ | ○ Good | ~$0.001 |
+| **gemini-2.5-flash-lite** ★ | ○ Good | ~$0.001 |
 | gemini-2.5-pro | ◎ Best | ~$0.008 |
+| gemini-3.1-pro-preview | ◎◎ Highest | ~$0.02 |
 
-**Recommended: `gemini-2.0-flash`** — fast and cheap. Upgrade to 2.5-pro if you need higher accuracy.
+**Recommended: `gemini-2.5-flash-lite`** — fast and cheap. Upgrade to 2.5-pro if you need higher accuracy.
 
 > \* Estimated per code generation request (~7,000 input / 2,000 output tokens for Claude).  
 > Actual cost depends on prompt complexity and conversation length.  
@@ -100,7 +101,7 @@ A template is included as `rag_config.template.json`.
 ```json
 {
   "claude_model": "claude-sonnet-4-6",
-  "gemini_model": "gemini-2.0-flash",
+  "gemini_model": "gemini-2.5-flash-lite",
   "api_keys": {
     "claude_api_key": "sk-ant-...",
     "gemini_api_key": "AIza..."

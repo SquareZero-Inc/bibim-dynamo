@@ -119,7 +119,7 @@ namespace BIBIM_MVP
             if (geminiKey == GeminiPlaceholder) geminiKey = _existingGeminiKey;
             if (geminiKey == GeminiPlaceholder) geminiKey = _existingGeminiKey;
             string claudeModel = GetSelectedTag(ClaudeModelCombo, "claude-sonnet-4-6");
-            string geminiModel = GetSelectedTag(GeminiModelCombo, "gemini-2.0-flash");
+            string geminiModel = GetSelectedTag(GeminiModelCombo, "gemini-2.5-flash-lite");
 
             try
             {

@@ -114,8 +114,8 @@
             <ComboBoxItem Tag="claude-sonnet-4-6"
                           Content="claude-sonnet-4-6  —  Best balance  ★ Recommended"
                           IsSelected="True"/>
-            <ComboBoxItem Tag="claude-opus-4-6"
-                          Content="claude-opus-4-6  —  Most capable"/>
+            <ComboBoxItem Tag="claude-opus-4-7"
+                          Content="claude-opus-4-7  —  Most capable (Apr 2026)"/>
             <ComboBoxItem Tag="claude-haiku-4-5"
                           Content="claude-haiku-4-5  —  Fastest &amp; cheapest"/>
         </ComboBox>
@@ -146,11 +146,13 @@
         <ComboBox x:Name="GeminiModelCombo" Grid.Row="9"
                   Style="{StaticResource DarkCombo}"
                   IsEnabled="False">
-            <ComboBoxItem Tag="gemini-2.0-flash"
-                          Content="gemini-2.0-flash  —  Fast &amp; cheap  ★ Recommended"
+            <ComboBoxItem Tag="gemini-2.5-flash-lite"
+                          Content="gemini-2.5-flash-lite  —  Fast &amp; cheap  ★ Recommended"
                           IsSelected="True"/>
             <ComboBoxItem Tag="gemini-2.5-pro"
                           Content="gemini-2.5-pro  —  Best RAG quality"/>
+            <ComboBoxItem Tag="gemini-3.1-pro-preview"
+                          Content="gemini-3.1-pro-preview  —  Latest (preview)"/>
         </ComboBox>
 
         <!-- Error -->
