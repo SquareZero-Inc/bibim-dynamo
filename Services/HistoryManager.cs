@@ -26,8 +26,7 @@ namespace BIBIM_MVP
                 string summary = UserPrompt.Length > 40
                     ? UserPrompt.Substring(0, 40) + "..."
                     : UserPrompt;
-                return summary.Replace("
-", " ").Replace("", "");
+                return summary.Replace("\n", " ").Replace("\r", "");
             }
         }
 

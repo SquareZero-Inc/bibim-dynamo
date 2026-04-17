@@ -114,13 +114,11 @@ namespace BIBIM_MVP
         public ObservableCollection<HistoryEntry> HistoryList { get; } = new ObservableCollection<HistoryEntry>();
 
         /// <summary>
-        /
         /// Exposes SpecificationManager state for UI binding.
         /// </summary>
         public bool HasPendingSpec => _specManager.HasPendingSpec;
 
         /// <summary>
-        /
         /// Requirement: 2.1, 8.1
         /// </summary>
         private bool _isRetryButtonVisible;
@@ -140,24 +138,20 @@ namespace BIBIM_MVP
         public ICommand NewChatCommand { get; }
 
         /// <summary>
-        /
         /// Bound to confirm button in spec card.
         /// </summary>
         public ICommand ConfirmSpecCommand { get; }
 
         /// <summary>
-        /
         /// Bound to modify button in spec card.
         /// </summary>
         public ICommand RequestChangesCommand { get; }
 
         /// <summary>
-        /
         /// </summary>
         public ICommand CancelSpecCommand { get; }
 
         /// <summary>
-        /
         /// Requirement: 2.1
         /// </summary>
         public ICommand RetryCommand { get; }
@@ -177,6 +171,8 @@ namespace BIBIM_MVP
             _viewLoadedParams = viewLoadedParams;
             _localSessionManager = new LocalSessionManager();
             _nodeManipulator = new NodeManipulator(viewLoadedParams);
+
+
             _specManager = new SpecificationManager();
             _specManager.SpecStateChanged += OnSpecStateChanged;
 
@@ -192,6 +188,8 @@ namespace BIBIM_MVP
             ConfirmSpecCommand = new RelayCommand(async (obj) => await ConfirmSpecAsync());
             RequestChangesCommand = new RelayCommand((obj) => { RequestChanges(); return Task.CompletedTask; });
             CancelSpecCommand = new RelayCommand((obj) => { CancelSpec(); return Task.CompletedTask; });
+
+
             RetryCommand = new RelayCommand(async (obj) => await HandleRetryAsync(), (obj) => !IsBusy);
 
             // Initialize cancel command
@@ -205,7 +203,6 @@ namespace BIBIM_MVP
         }
 
         /// <summary>
-        /
         /// </summary>
         private void OnSpecStateChanged(object sender, SpecStateChangedEventArgs e)
         {
@@ -214,7 +211,6 @@ namespace BIBIM_MVP
 
         /// <summary>
         /// Starts a new chat session, clearing current conversation.
-        /
         /// Requirements: 4.2
         /// </summary>
         private void StartNewChat()
@@ -222,15 +218,21 @@ namespace BIBIM_MVP
             _currentSession = _localSessionManager.CreateSession();
             ClearConversationHistory();
             TokenTracker.ResetSession();
+
+
             _specManager.ClearPendingSpec();
 
             _lastGeneratedPythonNodeGuid = null;
             _lastConfirmedSpec = null;
             _lastConfirmedSpecAtUtc = DateTime.MinValue;
+            
+
             if (_contextManager != null)
             {
                 _contextManager.StartNewSession(_currentSession.SessionId);
             }
+            
+
             IsRetryButtonVisible = false;
             
             MessagesUpdated?.Invoke(this, "");
@@ -277,7 +279,6 @@ namespace BIBIM_MVP
         }
 
         /// <summary>
-        /
         /// Requirements: 3.1, 3.2
         /// </summary>
         /// <param name="errorMessage">The user-friendly error message to display</param>
@@ -335,13 +336,14 @@ namespace BIBIM_MVP
 
             // Save user message to history (new format)
             SaveSingleMessage("user", "text", userMsg, null, requestId);
+
+
             await HandleSpecFirstFlowAsync(userMsg, requestId);
             requestTotalSw.Stop();
             LogPerf(requestId, "request-total", requestTotalSw.ElapsedMilliseconds);
         }
 
         /// <summary>
-        /
         /// - Check if bypass prefix is present (e.g., "!direct ")
         /// - If bypass: call existing direct code generation flow
         /// - If no pending spec: call SpecGenerator.GenerateSpecificationAsync()
@@ -380,6 +382,8 @@ namespace BIBIM_MVP
                     StatusText = "";
                     return;
                 }
+
+
                 bool isBypass = userMessage.StartsWith(BypassPrefix, StringComparison.OrdinalIgnoreCase) ||
                                userMessage.StartsWith(BypassPrefixAlt, StringComparison.OrdinalIgnoreCase);
 
@@ -402,6 +406,8 @@ namespace BIBIM_MVP
                     HandleCancellation();
                     return;
                 }
+
+
                 if (_specManager.HasPendingSpec)
                 {
                     // Route to revision flow - user message is treated as feedback
@@ -453,7 +459,6 @@ namespace BIBIM_MVP
         /// <summary>
         /// Direct code generation flow (bypass spec-first).
         /// Uses the existing GeminiService flow.
-        /
         /// </summary>
         private async Task DirectCodeGenerationAsync(string userMessage, string requestId = null)
         {
@@ -486,6 +491,7 @@ namespace BIBIM_MVP
             }
             catch (Exception ex)
             {
+
                 await HandleApiError(userMessage, ex);
             }
             finally
@@ -500,7 +506,6 @@ namespace BIBIM_MVP
         /// If the response is a general chat (not code request), display it directly.
         /// If the spec has clarifying questions, display them as conversational questions first.
         /// Only show the spec card when all questions are resolved.
-        /
         /// </summary>
         private async Task GenerateNewSpecificationAsync(string userMessage, string requestId = null)
         {
@@ -561,8 +566,7 @@ namespace BIBIM_MVP
                     _specManager.SetPendingSpec(spec);
 
                     // Flat text used only for history/logging (not for the form)
-                    string questionsText = string.Join("
-", spec.ClarifyingQuestions);
+                    string questionsText = string.Join("\n", spec.ClarifyingQuestions);
                     RecordSuccessfulTurn(userMessage, $"TYPE: QUESTION|{questionsText}");
 
                     // Save AI question to history (new format)
@@ -583,9 +587,7 @@ namespace BIBIM_MVP
                     AppendHtmlMessage(ChatHtmlBuilder.AiBubble(specHtml));
 
                     // Context gets raw JSON (recovery), history gets a readable summary (API context)
-                    string specSummary = $"[SPEC] {spec.OriginalRequest}
-Steps: {string.Join(", ", spec.ProcessingSteps ?? new System.Collections.Generic.List<string>())}
-Output: {spec.Output?.Description ?? "N/A"}";
+                    string specSummary = $"[SPEC] {spec.OriginalRequest}\nSteps: {string.Join(", ", spec.ProcessingSteps ?? new System.Collections.Generic.List<string>())}\nOutput: {spec.Output?.Description ?? "N/A"}";
                     RecordSuccessfulTurn(userMessage, $"SPEC_GENERATED|{specJson}", specSummary);
 
                     // Save spec to history (new format)
@@ -599,13 +601,13 @@ Output: {spec.Output?.Description ?? "N/A"}";
             }
             catch (Exception ex)
             {
+
                 await HandleApiError(userMessage, ex);
             }
         }
 
         /// <summary>
         /// Revise existing specification based on user feedback.
-        /
         /// </summary>
         private async Task ReviseSpecificationAsync(string userFeedback, string requestId = null)
         {
@@ -678,8 +680,7 @@ Output: {spec.Output?.Description ?? "N/A"}";
                     _specManager.SetPendingSpec(revisedSpec);
 
                     // Flat text used only for history/logging (not for the form)
-                    string questionsText = string.Join("
-", revisedSpec.ClarifyingQuestions);
+                    string questionsText = string.Join("\n", revisedSpec.ClarifyingQuestions);
                     RecordSuccessfulTurn(userFeedback, $"TYPE: QUESTION|{questionsText}");
 
                     // Save AI question to history (new format)
@@ -706,9 +707,7 @@ Output: {spec.Output?.Description ?? "N/A"}";
                 AppendHtmlMessage(ChatHtmlBuilder.AiBubble(specHtml));
 
                 // Context gets raw JSON (recovery), history gets a readable summary (API context)
-                string specSummary = $"[SPEC_REVISED] {revisedSpec.OriginalRequest}
-Steps: {string.Join(", ", revisedSpec.ProcessingSteps ?? new System.Collections.Generic.List<string>())}
-Output: {revisedSpec.Output?.Description ?? "N/A"}";
+                string specSummary = $"[SPEC_REVISED] {revisedSpec.OriginalRequest}\nSteps: {string.Join(", ", revisedSpec.ProcessingSteps ?? new System.Collections.Generic.List<string>())}\nOutput: {revisedSpec.Output?.Description ?? "N/A"}";
                 RecordSuccessfulTurn(userFeedback, $"SPEC_REVISED|{specJson}", specSummary);
 
                 // Save revised spec to history (new format)
@@ -723,12 +722,12 @@ Output: {revisedSpec.Output?.Description ?? "N/A"}";
             }
             catch (Exception ex)
             {
+
                 await HandleApiError(userFeedback, ex);
             }
         }
 
         /// <summary>
-        /
         /// Confirms the pending specification and generates code.
         /// </summary>
         private async Task ConfirmSpecAsync()
@@ -780,9 +779,7 @@ Output: {revisedSpec.Output?.Description ?? "N/A"}";
         }
 
         /// <summary>
-        /
         /// Builds prompt including spec details and calls GeminiService.
-        /
         /// </summary>
         /// <param name="spec">The confirmed specification.</param>
         /// <returns>True if code generation succeeded, false if an error occurred.</returns>
@@ -821,6 +818,7 @@ Output: {revisedSpec.Output?.Description ?? "N/A"}";
             }
             catch (Exception ex)
             {
+
                 await HandleApiError(spec.OriginalRequest, ex);
                 success = false;
             }
@@ -837,7 +835,6 @@ Output: {revisedSpec.Output?.Description ?? "N/A"}";
         }
 
         /// <summary>
-        /
         /// Ensures the code generator has full context from the confirmed spec.
         /// </summary>
         private string BuildSpecEnhancedPrompt(CodeSpecification spec)
@@ -878,7 +875,6 @@ Output: {revisedSpec.Output?.Description ?? "N/A"}";
         }
 
         /// <summary>
-        /
         /// Requirements: 3.1, 3.2, 3.3, 7.1, 7.5
         /// </summary>
         private async Task HandleApiError(string userMessage, Exception ex)
@@ -912,8 +908,7 @@ Output: {revisedSpec.Output?.Description ?? "N/A"}";
                     string truncatedStack = ex.StackTrace.Length > 500 
                         ? ex.StackTrace.Substring(0, 500) + "..." 
                         : ex.StackTrace;
-                    Logger.Log("ChatWorkspaceViewModel", $"[API_ERROR] rid={requestId} stack={truncatedStack.Replace("
-", " | ")}");
+                    Logger.Log("ChatWorkspaceViewModel", $"[API_ERROR] rid={requestId} stack={truncatedStack.Replace("\n", " | ")}");
                 }
 
                 // Create retry context ()
@@ -942,7 +937,7 @@ Output: {revisedSpec.Output?.Description ?? "N/A"}";
                     errorMessage = L("ViewModel_ServerBusy");
                 }
 
-                // Display error message using AppendErrorMessageToChat
+                // Display error message using AppendErrorMessageToChat (Task 7.2)
                 AppendErrorMessageToChat(errorMessage);
 
                 // Show retry button ()
@@ -959,7 +954,6 @@ Output: {revisedSpec.Output?.Description ?? "N/A"}";
         }
 
         /// <summary>
-        /
         /// Requirement: 7.1
         /// </summary>
         private string ClassifyError(Exception ex)
@@ -1022,7 +1016,6 @@ Output: {revisedSpec.Output?.Description ?? "N/A"}";
         }
 
         /// <summary>
-        /
         /// Requirements: 2.2, 2.3, 6.1, 6.4, 6.5
         /// </summary>
         private async Task HandleRetryAsync()
@@ -1041,6 +1034,8 @@ Output: {revisedSpec.Output?.Description ?? "N/A"}";
             Logger.Log(
                 "ChatWorkspaceViewModel",
                 $"[PERF] rid={requestId} step=request-start detail=retry_prompt_len:{retryContext.OriginalUserMessage?.Length ?? 0}");
+
+
             ShowRetryLoading();
             var codeFlowSw = Stopwatch.StartNew();
 
@@ -1100,12 +1095,13 @@ Output: {revisedSpec.Output?.Description ?? "N/A"}";
                 LogPerf(requestId, "code-flow", codeFlowSw.ElapsedMilliseconds, "retry");
                 requestTotalSw.Stop();
                 LogPerf(requestId, "request-total", requestTotalSw.ElapsedMilliseconds);
+
+
                 HideRetryLoading();
             }
         }
 
         /// <summary>
-        /
         /// Requirement: 8.2
         /// </summary>
         private void ShowRetryLoading()
@@ -1117,7 +1113,6 @@ Output: {revisedSpec.Output?.Description ?? "N/A"}";
         }
 
         /// <summary>
-        /
         /// Requirement: 8.2
         /// </summary>
         private void HideRetryLoading()
@@ -1128,7 +1123,6 @@ Output: {revisedSpec.Output?.Description ?? "N/A"}";
         }
 
         /// <summary>
-        /
         /// Displays prompt for user to enter feedback.
         /// </summary>
         private void RequestChanges()
@@ -1146,7 +1140,6 @@ Output: {revisedSpec.Output?.Description ?? "N/A"}";
         }
 
         /// <summary>
-        /
         /// Clears the pending specification and displays cancellation message.
         /// </summary>
         private void CancelSpec()
@@ -1468,8 +1461,7 @@ Output: {revisedSpec.Output?.Description ?? "N/A"}";
                             guideHtml));
                     }
 
-                    int lineCount = cleanedCode.Split('
-').Length;
+                    int lineCount = cleanedCode.Split('\n').Length;
                     AppendHtmlMessage(ChatHtmlBuilder.CodeToggleBubble(
                         EscapeHtmlForCode(cleanedCode),
                         EscapeHtml(LF("ViewModel_ViewGeneratedCode", lineCount)),
@@ -1515,8 +1507,7 @@ Output: {revisedSpec.Output?.Description ?? "N/A"}";
                 .Replace("<", "&lt;")
                 .Replace(">", "&gt;")
                 .Replace("\"", "&quot;")
-                .Replace("
-", "<br/>");
+                .Replace("\n", "<br/>");
         }
 
         /// <summary>
@@ -1530,8 +1521,7 @@ Output: {revisedSpec.Output?.Description ?? "N/A"}";
                 .Replace("<", "&lt;")
                 .Replace(">", "&gt;")
                 .Replace("\"", "&quot;");
-            // NOTE: Do NOT replace 
- - pre/code tags need actual newlines
+            // NOTE: Do NOT replace \n - pre/code tags need actual newlines
         }
 
         private static readonly Regex _markdownCodePattern = new Regex(
@@ -1555,11 +1545,7 @@ Output: {revisedSpec.Output?.Description ?? "N/A"}";
             else if (importSysIndex >= 0)
                 codeToProcess = codeToProcess.Substring(importSysIndex);
 
-            string[] garbagePatterns = { "
-```", "
-###", "
-TYPE:", "
-## ", "```", "TYPE:" };
+            string[] garbagePatterns = { "\n```", "\n###", "\nTYPE:", "\n## ", "```", "TYPE:" };
             foreach (string pattern in garbagePatterns)
             {
                 int garbageIndex = codeToProcess.IndexOf(pattern);
@@ -2042,6 +2028,8 @@ TYPE:", "
             IsHistoryPanelVisible = false;
             _htmlContent.Clear();
             _conversationHistory.Clear();
+
+
             _specManager.ClearPendingSpec();
 
             _lastConfirmedSpec = null;
@@ -2053,6 +2041,8 @@ TYPE:", "
 
             // Set as current session for continuing conversation
             _currentSession = session;
+
+
             // Requirements: 4.3, 4.4
             // FIX: Also restore _conversationHistory from SessionContext.Turns for LLM API calls
             if (_contextManager != null)
@@ -2119,6 +2109,8 @@ TYPE:", "
                 {
                     DisplaySingleMessage(msg);
                 }
+                
+
                 // Requirements: 4.3, 4.4
                 if (_contextManager != null)
                 {
@@ -2160,8 +2152,7 @@ TYPE:", "
                     // Python code if exists (collapsed by default)
                     if (!string.IsNullOrEmpty(msg.PythonCode))
                     {
-                        int historyLineCount = msg.PythonCode.Split('
-').Length;
+                        int historyLineCount = msg.PythonCode.Split('\n').Length;
                         AppendHtmlMessage(ChatHtmlBuilder.CodeToggleBubble(
                             EscapeHtmlForCode(msg.PythonCode),
                             EscapeHtml(LF("ViewModel_ViewGeneratedCode", historyLineCount)),
@@ -2222,8 +2213,7 @@ TYPE:", "
                         }
                         if (!string.IsNullOrEmpty(msg.PythonCode))
                         {
-                            int lineCount = msg.PythonCode.Split('
-').Length;
+                            int lineCount = msg.PythonCode.Split('\n').Length;
                             AppendHtmlMessage(ChatHtmlBuilder.CodeToggleBubble(
                                 EscapeHtmlForCode(msg.PythonCode),
                                 EscapeHtml(LF("ViewModel_ViewGeneratedCode", lineCount)),

@@ -152,8 +152,7 @@ namespace BIBIM_MVP
             if (string.IsNullOrWhiteSpace(raw))
                 return string.Empty;
 
-            string trimmed = raw.Replace("", " ").Replace("
-", " ").Trim();
+            string trimmed = raw.Replace("\r", " ").Replace("\n", " ").Trim();
             while (trimmed.Contains("  "))
                 trimmed = trimmed.Replace("  ", " ");
 

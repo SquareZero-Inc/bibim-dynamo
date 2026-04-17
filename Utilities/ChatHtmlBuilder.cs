@@ -27,8 +27,7 @@ namespace BIBIM_MVP
                 .Replace("<", "&lt;")
                 .Replace(">", "&gt;")
                 .Replace("\"", "&quot;")
-                .Replace("
-", "<br/>");
+                .Replace("\n", "<br/>");
         }
 
         /// <summary>Escapes text for &lt;pre&gt;&lt;code&gt; blocks (preserves newlines).</summary>

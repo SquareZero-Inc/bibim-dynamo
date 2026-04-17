@@ -606,8 +606,7 @@ namespace BIBIM_MVP
 
                 scriptProp.SetValue(node, newCode);
 
-                int lineCount = newCode.Split('
-').Length;
+                int lineCount = newCode.Split('\n').Length;
                 details = LocalizationService.Format("NodeManipulator_CodeReplaceSuccess", lineCount);
                 return true;
             }
@@ -1109,8 +1108,7 @@ namespace BIBIM_MVP
             }
             catch (Exception ex)
             {
-                Log($"[CreateNode] ERROR: {ex.Message}
-StackTrace: {ex.StackTrace}");
+                Log($"[CreateNode] ERROR: {ex.Message}\nStackTrace: {ex.StackTrace}");
                 return false;
             }
         }
@@ -1440,8 +1438,7 @@ StackTrace: {ex.StackTrace}");
             }
             catch (Exception ex)
             {
-                Logger.Log("NodeManipulator", $"Failed to add input ports: {ex.Message}
-StackTrace: {ex.StackTrace}");
+                Logger.Log("NodeManipulator", $"Failed to add input ports: {ex.Message}\nStackTrace: {ex.StackTrace}");
                 return false;
             }
         }

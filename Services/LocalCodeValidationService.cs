@@ -145,33 +145,27 @@ namespace BIBIM_MVP
         }
 
         private static readonly Regex BuiltInParameterRegex =
-            new Regex(@"BuiltInParameter\.([A-Za-z_][A-Za-z0-9_]*)", RegexOptions.Compiled);
+            new Regex(@"\bBuiltInParameter\.([A-Za-z_][A-Za-z0-9_]*)\b", RegexOptions.Compiled);
 
         private static readonly Regex BuiltInCategoryRegex =
-            new Regex(@"BuiltInCategory\.([A-Za-z_][A-Za-z0-9_]*)", RegexOptions.Compiled);
+            new Regex(@"\bBuiltInCategory\.([A-Za-z_][A-Za-z0-9_]*)\b", RegexOptions.Compiled);
 
         private static readonly Regex UnitTypeIdRegex =
-            new Regex(@"UnitTypeId\.([A-Za-z_][A-Za-z0-9_]*)", RegexOptions.Compiled);
+            new Regex(@"\bUnitTypeId\.([A-Za-z_][A-Za-z0-9_]*)\b", RegexOptions.Compiled);
 
         private static readonly Regex TypeMemberRegex =
-            new Regex(@"([A-Z][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)", RegexOptions.Compiled);
+            new Regex(@"\b([A-Z][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)\b", RegexOptions.Compiled);
 
         // Atomic groups (?>...) prevent catastrophic backtracking on unclosed parentheses
         private static readonly Regex TypeMethodCallRegex =
-            new Regex(@"([A-Z][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)\s*\((?>(?:[^()
-]|\((?>(?:[^()
-]|\([^()
-]*\))*)\))*)\)", RegexOptions.Compiled);
+            new Regex(@"\b([A-Z][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)\s*\((?>(?:[^()\r\n]|\((?>(?:[^()\r\n]|\([^()\r\n]*\))*)\))*)\)", RegexOptions.Compiled);
 
         private static readonly Regex TypeCtorRegex =
-            new Regex(@"(?<!\.)([A-Z][A-Za-z0-9_]*)\s*\(", RegexOptions.Compiled);
+            new Regex(@"(?<!\.)\b([A-Z][A-Za-z0-9_]*)\s*\(", RegexOptions.Compiled);
 
         // Atomic groups (?>...) prevent catastrophic backtracking on unclosed parentheses
         private static readonly Regex TypeCtorCallRegex =
-            new Regex(@"(?<!\.)([A-Z][A-Za-z0-9_]*)\s*\((?>(?:[^()
-]|\((?>(?:[^()
-]|\([^()
-]*\))*)\))*)\)", RegexOptions.Compiled);
+            new Regex(@"(?<!\.)\b([A-Z][A-Za-z0-9_]*)\s*\((?>(?:[^()\r\n]|\((?>(?:[^()\r\n]|\([^()\r\n]*\))*)\))*)\)", RegexOptions.Compiled);
 
         private static readonly Regex ImportFromRegex =
             new Regex(@"^\s*from\s+([A-Za-z0-9_\.]+)\s+import\s+(.+)$", RegexOptions.Compiled);
@@ -183,19 +177,19 @@ namespace BIBIM_MVP
             new Regex(@"except\s+[A-Za-z_][A-Za-z0-9_]*\s*,\s*[A-Za-z_][A-Za-z0-9_]*\s*:", RegexOptions.Compiled);
 
         private static readonly Regex ReadOnlySetRegex =
-            new Regex(@"([A-Za-z_][A-Za-z0-9_]*)\.Set\s*\(", RegexOptions.Compiled);
+            new Regex(@"\b([A-Za-z_][A-Za-z0-9_]*)\.Set\s*\(", RegexOptions.Compiled);
 
         private static readonly Regex ParameterAssignRegex =
-            new Regex(@"([A-Za-z_][A-Za-z0-9_]*)\s*=\s*.*get_Parameter\s*\(", RegexOptions.Compiled);
+            new Regex(@"\b([A-Za-z_][A-Za-z0-9_]*)\s*=\s*.*get_Parameter\s*\(", RegexOptions.Compiled);
 
         private static readonly Regex ReadOnlyGuardRegex =
-            new Regex(@"not\s+([A-Za-z_][A-Za-z0-9_]*)\.IsReadOnly|([A-Za-z_][A-Za-z0-9_]*)\.IsReadOnly\s*==\s*False", RegexOptions.Compiled);
+            new Regex(@"\bnot\s+([A-Za-z_][A-Za-z0-9_]*)\.IsReadOnly\b|\b([A-Za-z_][A-Za-z0-9_]*)\.IsReadOnly\s*==\s*False\b", RegexOptions.Compiled);
 
         private static readonly Regex LocalAssignRegex =
             new Regex(@"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=", RegexOptions.Compiled);
 
         private static readonly Regex LocalForVarRegex =
-            new Regex(@"^\s*for\s+([A-Za-z_][A-Za-z0-9_]*)\s+in", RegexOptions.Compiled);
+            new Regex(@"^\s*for\s+([A-Za-z_][A-Za-z0-9_]*)\s+in\b", RegexOptions.Compiled);
 
         private static readonly HashSet<string> NonRevitTypeAllowList = new HashSet<string>(StringComparer.Ordinal)
         {
@@ -1018,7 +1012,7 @@ namespace BIBIM_MVP
             {
                 fixedCode = Regex.Replace(
                     fixedCode,
-                    @"" + Regex.Escape(pair.Key) + @"",
+                    @"\b" + Regex.Escape(pair.Key) + @"\b",
                     pair.Value);
             }
 
@@ -1084,7 +1078,7 @@ namespace BIBIM_MVP
                           string.Equals(memberName, "GetElementById", StringComparison.Ordinal)))
                 {
                     var docPattern = new Regex(
-                        @"Document\." + Regex.Escape(memberName) + @"\s*\(",
+                        @"\bDocument\." + Regex.Escape(memberName) + @"\s*\(",
                         RegexOptions.Compiled);
                     string before = fixedCode;
                     fixedCode = docPattern.Replace(fixedCode, "doc." + memberName + "(");
@@ -1094,7 +1088,7 @@ namespace BIBIM_MVP
                 else
                 {
                     var genericPattern = new Regex(
-                        @"" + Regex.Escape(typeName) + @"\." + Regex.Escape(memberName) + @"\s*\(\s*\)",
+                        @"\b" + Regex.Escape(typeName) + @"\." + Regex.Escape(memberName) + @"\s*\(\s*\)",
                         RegexOptions.Compiled);
                     string replacement = "# FIXME: " + typeName + "." + memberName + "() is an instance call — use an instance variable";
                     string before = fixedCode;
@@ -1428,7 +1422,7 @@ namespace BIBIM_MVP
                     continue;
                 }
 
-                if (ch == '\')
+                if (ch == '\\')
                 {
                     escaping = true;
                     continue;
@@ -1610,8 +1604,7 @@ namespace BIBIM_MVP
                     TypeAliases = new Dictionary<string, string>(StringComparer.Ordinal)
                 };
 
-                var lines = code.Split(new[] { '', '
-' }, StringSplitOptions.RemoveEmptyEntries);
+                var lines = code.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
 
                 foreach (var raw in lines)
                 {
@@ -1671,8 +1664,7 @@ namespace BIBIM_MVP
                 if (string.IsNullOrWhiteSpace(code))
                     return identifiers;
 
-                var lines = code.Split(new[] { '', '
-' }, StringSplitOptions.RemoveEmptyEntries);
+                var lines = code.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
                 foreach (var raw in lines)
                 {
                     string line = raw.Trim();

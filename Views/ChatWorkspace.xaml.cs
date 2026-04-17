@@ -1026,8 +1026,7 @@ function toggleCode(header) {{
             }
             catch
             {
-                return $"<p>{System.Net.WebUtility.HtmlEncode(markdown).Replace("
-", "<br/>")}</p>";
+                return $"<p>{System.Net.WebUtility.HtmlEncode(markdown).Replace("\n", "<br/>")}</p>";
             }
         }
 

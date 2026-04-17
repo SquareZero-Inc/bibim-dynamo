@@ -112,8 +112,7 @@ namespace BIBIM_MVP
             catch (Exception ex)
             {
                 data.Error = LocalizationService.Format("Analysis_GraphReadError", ex.Message);
-                LogGraphReader($"{data.Error}
-{ex.StackTrace}");
+                LogGraphReader($"{data.Error}\n{ex.StackTrace}");
             }
 
             return data;

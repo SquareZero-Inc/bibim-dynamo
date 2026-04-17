@@ -182,8 +182,7 @@ namespace BIBIM_MVP
             {
                 // Fallback: return escaped text if parsing fails
                 return System.Net.WebUtility.HtmlEncode(markdown)
-                    .Replace("
-", "<br/>");
+                    .Replace("\n", "<br/>");
             }
         }
 
@@ -199,15 +198,13 @@ namespace BIBIM_MVP
             try
             {
                 // Remove leading whitespace from each line to prevent any code block detection
-                var lines = markdown.Split('
-');
+                var lines = markdown.Split('\n');
                 var normalizedLines = new System.Collections.Generic.List<string>();
                 foreach (var line in lines)
                 {
                     normalizedLines.Add(line.TrimStart());
                 }
-                string normalized = string.Join("
-", normalizedLines);
+                string normalized = string.Join("\n", normalizedLines);
                 
                 // Ensure blank lines around tables
                 string preprocessed = EnsureBlankLinesAroundTables(normalized);
@@ -219,8 +216,7 @@ namespace BIBIM_MVP
             {
                 // Fallback: return escaped text if parsing fails
                 return System.Net.WebUtility.HtmlEncode(markdown)
-                    .Replace("
-", "<br/>");
+                    .Replace("\n", "<br/>");
             }
         }
 
@@ -231,8 +227,7 @@ namespace BIBIM_MVP
         /// </summary>
         private static string EnsureBlankLinesAroundTables(string markdown)
         {
-            var lines = markdown.Split('
-');
+            var lines = markdown.Split('\n');
             var result = new System.Text.StringBuilder();
 
             for (int i = 0; i < lines.Length; i++)
@@ -332,8 +327,7 @@ namespace BIBIM_MVP
         public static string RenderUserMessage(string message)
         {
             string escaped = System.Net.WebUtility.HtmlEncode(message ?? string.Empty)
-                .Replace("
-", "<br/>");
+                .Replace("\n", "<br/>");
             
             return $@"<!DOCTYPE html>
 <html>

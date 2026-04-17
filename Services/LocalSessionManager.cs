@@ -285,11 +285,9 @@ namespace BIBIM_MVP
 
             // Remove newlines and carriage returns (Requirement 5.3)
             var cleaned = userPrompt
-                .Replace("
-", " ")
-                .Replace("", " ")
-                .Replace("
-", " ")
+                .Replace("\r\n", " ")
+                .Replace("\r", " ")
+                .Replace("\n", " ")
                 .Trim();
 
             // Truncate to 50 characters with "..." if needed (Requirements 5.1, 5.2)

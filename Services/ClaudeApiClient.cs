@@ -102,9 +102,7 @@ namespace BIBIM_MVP
                     {
                         var errorMsg = await response.Content.ReadAsStringAsync();
                         Logger.Log("ClaudeApiClient", $"[API_ERROR] rid={requestId} status={(int)response.StatusCode} model={model} body={ClipForLog(errorMsg)}");
-                        return $"[API Error] {response.StatusCode}
-Model: {model}
-{errorMsg}";
+                        return $"[API Error] {response.StatusCode}\nModel: {model}\n{errorMsg}";
                     }
 
                     var responseString = await response.Content.ReadAsStringAsync();
@@ -136,9 +134,7 @@ Model: {model}
                             string truncMsg = callType == "graph_analysis"
                                 ? LocalizationService.Get("Analysis_ResponseTruncated")
                                 : LocalizationService.Get("Code_ResponseTruncated");
-                            result = truncMsg + "
-
-" + result;
+                            result = truncMsg + "\n\n" + result;
                         }
                         return result;
                     }
@@ -175,9 +171,7 @@ Model: {model}
                                 string truncMsg = callType == "graph_analysis"
                                     ? LocalizationService.Get("Analysis_ResponseTruncated")
                                     : LocalizationService.Get("Code_ResponseTruncated");
-                                result = truncMsg + "
-
-" + result;
+                                result = truncMsg + "\n\n" + result;
                             }
                             return result;
                         }
@@ -344,8 +338,7 @@ Model: {model}
         private static string ClipForLog(string text, int maxLen = 180)
         {
             if (string.IsNullOrEmpty(text)) return "";
-            string normalized = text.Replace("", " ").Replace("
-", " ");
+            string normalized = text.Replace("\r", " ").Replace("\n", " ");
             return normalized.Length <= maxLen ? normalized : normalized.Substring(0, maxLen) + "...";
         }
     }
