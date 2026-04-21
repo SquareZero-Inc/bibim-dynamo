@@ -329,6 +329,30 @@ namespace BIBIM_MVP
         /// and ## Solutions, extracting error→fix pairs.
         /// Returns formatted context string or empty if no relevant analysis found.
         /// </summary>
+        /// <summary>
+        /// Extract a short title from a SPEC_CONFIRMED message for use as a RAG query.
+        /// Falls back to the raw message if no title token found.
+        /// </summary>
+        private static string ExtractSpecTitle(string specMessage)
+        {
+            if (string.IsNullOrWhiteSpace(specMessage)) return specMessage;
+            // SPEC_CONFIRMED format: "[SPEC_CONFIRMED|title=...|...]"
+            const string titleTag = "title=";
+            int titleIdx = specMessage.IndexOf(titleTag, StringComparison.Ordinal);
+            if (titleIdx >= 0)
+            {
+                int start = titleIdx + titleTag.Length;
+                int end = specMessage.IndexOf('|', start);
+                string title = end > start
+                    ? specMessage.Substring(start, end - start)
+                    : specMessage.Substring(start);
+                if (!string.IsNullOrWhiteSpace(title)) return title.Trim();
+            }
+            // Fallback: strip the bracket wrapper and use raw text (first 200 chars)
+            string stripped = System.Text.RegularExpressions.Regex.Replace(specMessage, @"\[.*?\]", "").Trim();
+            return stripped.Length > 200 ? stripped.Substring(0, 200) : stripped;
+        }
+
         private static string ExtractAnalysisContext(IEnumerable<ChatMessage> history, string currentSpec)
         {
             if (history == null || string.IsNullOrWhiteSpace(currentSpec))
@@ -553,12 +577,41 @@ namespace BIBIM_MVP
                 bool isSpecBasedRequest = lastUserMessage.Contains("[SPEC_CONFIRMED|");
                 Logger.Log("GeminiService", $"[SPEC_TRIGGER] rid={requestId} matched={isSpecBasedRequest}");
                 
+                // Local BM25 RAG — indexes RevitAPI.xml from Revit installation.
+                // Replaces Gemini fileSearch RAG (which required SquareZero-owned stores).
+                // Lazy-load: first call builds the BM25 index (~1–3s), subsequent calls use cache.
+                // Falls back to empty context silently if RevitAPI.xml not found.
                 string apiDocContext = "";
                 bool ragFailed = false;
                 string ragFailReason = "";
-                // RAG disabled in OSS release — RagService code retained for future re-enablement.
-                // Store access requires rework after OSS transition; see README for details.
-                Logger.Log("GeminiService", $"[RAG_DISABLED] rid={requestId} skipping RAG fetch (OSS release)");
+                if (isSpecBasedRequest && !string.IsNullOrEmpty(lastUserMessage))
+                {
+                    try
+                    {
+                        var ragSw = Stopwatch.StartNew();
+                        // Extract user intent as RAG query (strip SPEC_CONFIRMED wrapper if present)
+                        string ragQuery = lastUserMessage.Contains("[SPEC_CONFIRMED|")
+                            ? ExtractSpecTitle(lastUserMessage)
+                            : lastUserMessage;
+                        apiDocContext = await LocalDynamoRagService.FetchContextAsync(
+                            ragQuery, revitVersion, cancellationToken);
+                        ragSw.Stop();
+                        Logger.Log("GeminiService",
+                            $"[RAG] rid={requestId} ms={ragSw.ElapsedMilliseconds} " +
+                            $"context_len={apiDocContext.Length} query=\"{ClipForLog(ragQuery, 80)}\"");
+                    }
+                    catch (Exception ragEx)
+                    {
+                        ragFailed = true;
+                        ragFailReason = ragEx.Message;
+                        Logger.Log("GeminiService", $"[RAG_ERROR] rid={requestId} err={ragEx.Message}");
+                        apiDocContext = "";
+                    }
+                }
+                else
+                {
+                    Logger.Log("GeminiService", $"[RAG_SKIP] rid={requestId} not spec-based request");
+                }
                 
                 // Extract previous Graph Analysis context for code generation
                 string analysisContext = "";
