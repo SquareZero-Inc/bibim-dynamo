@@ -1,20 +1,17 @@
 {
-  "_comment": "BIBIM AI config template. Only claude_api_key is required. RAG (Gemini fileSearch) is temporarily disabled in this OSS release — store access is being reworked. Get your Anthropic API key at https://console.anthropic.com/",
+  "_comment": "BIBIM AI config template. claude_model holds the active model id (Anthropic / OpenAI / Gemini). At least one provider key is required for the model you select. Anthropic: https://console.anthropic.com/  ·  OpenAI: https://platform.openai.com/api-keys  ·  Gemini: https://aistudio.google.com/apikey",
   "claude_model": "claude-sonnet-4-6",
   "gemini_model": "gemini-2.5-flash-lite",
-  "active_store": "",
-  "fallback_store": "",
   "api_keys": {
-    "claude_api_key": "YOUR_ANTHROPIC_API_KEY_HERE",
+    "anthropic_api_key": "",
+    "claude_api_key": "",
+    "openai_api_key": "",
     "gemini_api_key": ""
   },
   "validation": {
     "gate_enabled": true,
     "auto_fix_enabled": true,
     "auto_fix_max_attempts": 2,
-    "verify_stage_enabled": false,
-    "verify_timeout_seconds": 30,
-    "rag_timeout_seconds": 25,
     "enable_api_xml_hints": true,
     "rollout_phase": "phase3"
   }

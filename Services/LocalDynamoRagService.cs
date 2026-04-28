@@ -38,8 +38,11 @@ namespace BIBIM_MVP
             "RevitAPIIFC.xml"
         };
 
-        private const int TopK = 5;
-        private const int MaxChunkDisplayChars = 3000;
+        // Tightened in v1.0.2: TopK=3 covers the actual retrieval need without padding,
+        // and 1200-char chunks preserve method signatures + summary while dropping
+        // verbose Remarks blocks that rarely affected output quality.
+        private const int TopK = 3;
+        private const int MaxChunkDisplayChars = 1200;
 
         /// <summary>
         /// Fetch relevant Revit API documentation for the query.
@@ -227,7 +230,7 @@ namespace BIBIM_MVP
             sb.AppendLine($"[Class: {acc.ClassName}]");
             sb.AppendLine($"Namespace: {acc.Namespace}");
             if (!string.IsNullOrEmpty(acc.ClassSummary)) sb.AppendLine($"Summary: {acc.ClassSummary}");
-            if (!string.IsNullOrEmpty(acc.ClassRemarks)) sb.AppendLine($"Remarks: {acc.ClassRemarks}");
+            // ClassRemarks intentionally dropped — rarely changes output quality vs the token cost.
 
             if (acc.Members.Count > 0)
             {
@@ -242,7 +245,7 @@ namespace BIBIM_MVP
                     sb.AppendLine();
                     if (!string.IsNullOrEmpty(m.Summary)) sb.AppendLine($"  {m.Summary}");
                     foreach (var pd in m.ParamDescriptions) sb.AppendLine(pd);
-                    if (!string.IsNullOrEmpty(m.Remarks)) sb.AppendLine($"  Note: {m.Remarks}");
+                    // Per-member Remarks dropped for the same reason as ClassRemarks.
                 }
             }
 

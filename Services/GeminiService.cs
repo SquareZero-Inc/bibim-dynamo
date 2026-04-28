@@ -11,11 +11,11 @@ namespace BIBIM_MVP
 {
     /// <summary>
     /// Orchestrates the full code-generation pipeline:
-    ///   RAG fetch (RagService) → Claude codegen (ClaudeApiClient) →
-    ///   Gemini verify (RagService) → local validation gate.
+    ///   local BM25 RAG (<see cref="LocalDynamoRagService"/>) → Claude codegen
+    ///   (<see cref="ClaudeApiClient"/>) → local validation gate → autofix loop.
     ///
-    /// RAG, Claude API, and token-tracking concerns live in
-    /// <see cref="RagService"/> and <see cref="ClaudeApiClient"/> respectively.
+    /// Class name kept as <c>GeminiService</c> for back-compat with older log filters
+    /// and persisted session payloads.
     /// </summary>
     internal static class GeminiService
     {
@@ -98,7 +98,7 @@ namespace BIBIM_MVP
 
                 var autoFixSw = Stopwatch.StartNew();
                 string prompt = AutoFixRequestBuilder.BuildPrompt(currentCode, validation, revitVersion, attemptedFixes, maxFixAttempts);
-                string fixedText = await ClaudeApiClient.RequestValidationAutoFixAsync(claudeApiKey, claudeModel, prompt, requestId, attemptedFixes, cancellationToken);
+                string fixedText = await ClaudeApiClient.RequestValidationAutoFixAsync(claudeApiKey, claudeModel, prompt, revitVersion, dynamoVersion, requestId, attemptedFixes, cancellationToken);
                 autoFixSw.Stop();
 
                 LogPerf(requestId, "validation-autofix", autoFixSw.ElapsedMilliseconds, $"attempt={attemptedFixes}:len={fixedText?.Length ?? 0}");
@@ -557,16 +557,12 @@ namespace BIBIM_MVP
             try
             {
                 var config = ConfigService.GetRagConfig();
-                string ragStore = config.RagStore;
-                string ragFallbackStore = config.FallbackStore;
                 string revitVersion = config.RevitVersion;
                 string dynamoVersion = config.DynamoVersion;
                 string claudeModel = config.ClaudeModel;
-                string geminiModel = config.GeminiModel;
-                
+
                 string claudeApiKey = ClaudeApiClient.GetClaudeApiKey();
-                string geminiApiKey = RagService.GetGeminiApiKey();
-                
+
                 string lastUserMessage = "";
                 foreach (var msg in history)
                 {
@@ -646,86 +642,10 @@ namespace BIBIM_MVP
                     analysisContext);
                 codeSw.Stop();
                 LogPerf(requestId, "code", codeSw.ElapsedMilliseconds, isSpecBasedRequest ? "spec-prompt" : "direct");
-                bool enableVerifyStage = config.VerifyStageEnabled && !string.IsNullOrEmpty(geminiApiKey);
-                int verifyTimeoutSeconds = config.VerifyTimeoutSeconds > 0 ? config.VerifyTimeoutSeconds : 30;
-
-                // Optional verify stage: skip trivially short code (< 15 lines) to save latency
-                if (enableVerifyStage && initialResponse.Contains("TYPE: CODE|"))
-                {
-                    int codeStart = initialResponse.IndexOf("TYPE: CODE|") + "TYPE: CODE|".Length;
-                    int guideStart = initialResponse.IndexOf("TYPE: GUIDE|");
-
-                    string codeSection;
-                    if (guideStart > 0)
-                    {
-                        codeSection = initialResponse.Substring(codeStart, guideStart - codeStart).Trim();
-                    }
-                    else
-                    {
-                        codeSection = initialResponse.Substring(codeStart).Trim();
-                    }
-
-                    int codeLineCount = codeSection.Split('\n').Length;
-                    // Skip verify for short code OR simple read-only patterns (no Transaction = no side effects)
-                    bool isSimpleReadOnly = !codeSection.Contains("Transaction") &&
-                                           !codeSection.Contains("Set(") &&
-                                           !codeSection.Contains("Create(") &&
-                                           !codeSection.Contains("Delete(");
-                    if (codeLineCount < 40 && isSimpleReadOnly)
-                    {
-                        Logger.Log("GeminiService", $"[VERIFY] rid={requestId} skipped: simple read-only code ({codeLineCount} lines)");
-                        enableVerifyStage = false;
-                    }
-                    else if (codeLineCount < 15)
-                    {
-                        Logger.Log("GeminiService", $"[VERIFY] rid={requestId} skipped: trivial code ({codeLineCount} lines)");
-                        enableVerifyStage = false;
-                    }
-
-                    if (enableVerifyStage)
-                    {
-                        onProgress?.Invoke("verify");
-                    var verifySw = Stopwatch.StartNew();
-                    var verifyResult = await RagService.VerifyAndFixCodeAsync(
-                        geminiApiKey,
-                        codeSection,
-                        ragStore,
-                        revitVersion,
-                        dynamoVersion,
-                        geminiModel,
-                        requestId,
-                        verifyTimeoutSeconds);
-                    string verifiedCode = verifyResult.Code;
-                    verifySw.Stop();
-                    string verifyDetail;
-                    if (verifyResult.Outcome == "ok")
-                    {
-                        verifyDetail = verifiedCode == codeSection ? "unchanged" : "updated";
-                    }
-                    else
-                    {
-                        verifyDetail = verifyResult.Outcome;
-                    }
-                    if (!string.IsNullOrWhiteSpace(verifyResult.Detail))
-                    {
-                        verifyDetail += $":{verifyResult.Detail}";
-                    }
-                    LogPerf(requestId, "verify", verifySw.ElapsedMilliseconds, verifyDetail);
-                    
-                    if (!string.IsNullOrEmpty(verifiedCode) && verifiedCode != codeSection)
-                    {
-                        if (guideStart > 0)
-                        {
-                            string guideSection = initialResponse.Substring(guideStart);
-                            initialResponse = $"TYPE: CODE|{verifiedCode}\n{guideSection}";
-                        }
-                        else
-                        {
-                            initialResponse = $"TYPE: CODE|{verifiedCode}";
-                        }
-                    }
-                    } // end if (enableVerifyStage) after line-count check
-                }
+                // Verify stage (Gemini fileSearch round-trip) was removed in v1.0.2: the
+                // local validation gate below catches the same class of issues without an
+                // extra LLM round-trip, and the legacy Gemini fileSearch corpus is
+                // project-scoped so it never worked for OSS users anyway.
 
                 if (config.ValidationGateEnabled)
                 {

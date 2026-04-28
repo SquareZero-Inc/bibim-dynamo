@@ -3,7 +3,7 @@
 > **Repository**: [github.com/SquareZero-Inc/bibim-dynamo](https://github.com/SquareZero-Inc/bibim-dynamo)
 
 AI-powered Dynamo script generator and analyzer for Autodesk Revit.  
-Generate and analyze Dynamo Python scripts using natural language — powered by Claude (Anthropic).
+Generate and analyze Dynamo Python scripts using natural language — powered by Anthropic Claude, with OpenAI and Google Gemini routing wired in v1.0.2 (Anthropic is the field-verified path; full v1.1 verification of GPT-5.5 / Gemini 3.1 is in progress).
 
 > **BYOK (Bring Your Own Key)**: BIBIM uses your own API keys. No subscription required.
 
@@ -13,7 +13,9 @@ Generate and analyze Dynamo Python scripts using natural language — powered by
 
 - **Code Generation**: Describe what you want in natural language → get ready-to-run Dynamo Python code
 - **Graph Analysis**: Analyze existing Dynamo graphs and get improvement suggestions
-- **RAG (coming soon)**: Revit API documentation lookup via Gemini — temporarily disabled in OSS release
+- **Local RAG**: Revit API documentation search runs **locally** from `RevitAPI.xml` — no external service required (since v1.0.1)
+- **Multi-provider routing** (v1.0.2): Settings dialog accepts Anthropic / OpenAI / Google keys. Selecting GPT-5.5 or Gemini 3.1 routes the request to the matching provider via the factory in `Services/Providers/`. Anthropic Claude is the only path field-verified end-to-end on Dynamo workloads in this release; full v1.1 regression on the autofix loop and graph-analysis pipeline is pending.
+- **Prompt caching** (v1.0.2): Anthropic prompt caching is on by default. Spec → codegen → autofix calls within a 5-minute window share a cached system prompt. `TokenTracker` exposes `SessionCacheHitRatio` for visibility.
 - **Multi-version**: Supports Revit 2022–2027 / Dynamo 2.x–4.x
 
 ---
@@ -21,8 +23,10 @@ Generate and analyze Dynamo Python scripts using natural language — powered by
 ## Requirements
 
 - Autodesk Revit 2022 or later with Dynamo installed
-- An [Anthropic API key](https://console.anthropic.com/) (required)
-- A [Google Gemini API key](https://aistudio.google.com/apikey) (optional — for RAG, coming soon)
+- An [Anthropic API key](https://console.anthropic.com/) (required for the field-verified path in v1.0.2)
+- Optional (routes via factory in v1.0.2, full v1.1 verification pending): [OpenAI key](https://platform.openai.com/api-keys), [Google Gemini key](https://aistudio.google.com/apikey)
+
+In-app: the API Key Setup dialog has a **"📖 View API Key Setup Guide"** button that opens a step-by-step Notion guide.
 
 ---
 
@@ -46,39 +50,33 @@ API key format: sk-ant-api03-...
 Get one at: https://console.anthropic.com/
 ```
 
-### 3. RAG (Revit API doc search) — coming soon
+### 3. Revit API documentation search (local RAG)
 
-RAG (Gemini fileSearch) is **temporarily disabled** in this OSS release.
+BIBIM searches the Revit API **locally** from `RevitAPI.xml` — the file Autodesk ships with every Revit installation, and the same source the official online docs render from. No external service or extra setup required.
 
-**Why:** The RAG corpus (Revit API docs indexed per version) was hosted under a private SquareZero Google Cloud project. The Gemini fileSearch store is project-scoped — a user's own Gemini key cannot access another project's store. During the OSS transition, the store access model is being reworked.
-
-**Impact:** Code generation works normally. Claude's built-in Revit API knowledge combined with the local validation + auto-fix loop handles the vast majority of cases well.
-
-**Coming soon:** A public RAG endpoint or self-hostable corpus setup will be added in an upcoming release. The Gemini key input in Settings is greyed out until then.
+- **First-call build:** the index is built once per session in ~0.5 s, then cached for every subsequent search.
+- Coverage: core DB, UI, MEP, Structure, IFC.
+- v1.0.2 trim: top-K reduced 5 → 3 and chunk display capped at 1200 chars (member `Remarks` dropped) to keep RAG payload under ~3 KB per call.
+- The Gemini key field in Settings is **no longer for RAG**; it is the LLM key routed to `:generateContent` when Gemini 3.1 Pro is the active model.
 
 ---
 
-## Recommended Model Configuration
+## Model Configuration
 
-Open **⚙ Settings → API Key Settings** to select your models.
+Open **⚙ Settings → API Key Settings** to select your model. Each model is annotated with an inline speed glyph (⚡⚡⚡ fast → ⚡ slow). Models without a registered provider key are disabled with a tooltip.
 
-### Claude (Code Generation)
+| Model | Provider | Status in v1.0.2 | Cost / session* |
+|-------|----------|------------------|-----------------|
+| **claude-sonnet-4-6** ⭐ | Anthropic | ✅ Field-verified | ~$0.05 |
+| claude-opus-4-7 | Anthropic | ✅ Field-verified | ~$0.28 |
+| gpt-5.5 | OpenAI | 🟡 Routed — full v1.1 verification pending | ~$0.10 |
+| gemini-3.1-pro-preview | Google | 🟡 Routed — full v1.1 verification pending | ~$0.04 |
 
-| Model | Quality | Speed | Cost / session* |
-|-------|---------|-------|-----------------|
-| **claude-sonnet-4-6** ★ | ◎ Excellent | ◎ Fast | ~$0.05 |
-| claude-opus-4-7 | ◎◎ Best | △ Slower | ~$0.28 |
-| claude-haiku-4-5 | ○ Good | ◎◎ Fastest | ~$0.01 |
+**Recommended: `claude-sonnet-4-6`** — best balance of quality, speed, and cost. With prompt caching enabled, repeated turns within a 5-minute window are cheaper than the table suggests.
 
-**Recommended: `claude-sonnet-4-6`** — best balance of quality, speed, and cost.
-
-### Gemini (RAG — coming soon)
-
-RAG is temporarily disabled. Gemini model selection will be re-enabled in a future release.
-
-> \* Estimated per code generation request (~7,000 input / 2,000 output tokens for Claude).  
-> Actual cost depends on prompt complexity and conversation length.  
-> Prices are based on Anthropic and Google pricing as of April 2026.
+> \* Estimated per code generation request (~7,000 input / 2,000 output tokens, **before** cache discount).  
+> Actual cost depends on prompt complexity, conversation length, and prompt-cache hit ratio.  
+> Prices are based on each provider's public pricing as of April 2026.
 
 ---
 
@@ -90,15 +88,33 @@ A template is included as `rag_config.template.json`.
 ```json
 {
   "claude_model": "claude-sonnet-4-6",
-  "gemini_model": "gemini-2.5-flash-lite",
   "api_keys": {
-    "claude_api_key": "sk-ant-...",
-    "gemini_api_key": "AIza..."
+    "anthropic_api_key": "sk-ant-...",
+    "openai_api_key":    "sk-...",
+    "gemini_api_key":    "AIzaSy..."
   }
 }
 ```
 
-You can edit this file directly, or use the Settings dialog in the UI.
+(`claude_model` is the field name kept for backwards compatibility — it stores any selected model id.) You can edit this file directly, or use the Settings dialog in the UI. Upgrades from 1.0.1 are migrated automatically.
+
+---
+
+## Token usage & cost transparency (v1.0.2)
+
+Anthropic prompt caching is enabled by default — within the 5-minute cache window, the system-prompt prefix is billed at the cached rate (`$0.30 / 1M`, 90% off the normal `$3 / 1M`). Spec → codegen → autofix calls in the same pipeline run share the cached prefix.
+
+Cache effectiveness is logged per call and per session in `%APPDATA%\BIBIM\logs\bibim_debug.txt`:
+```
+[TokenTracker] rid=abc1234 type=codegen provider=claude in=520 out=210 cache_create=0 cache_read=2680
+                session_total_in=4200 session_total_out=1850
+                session_cache_create=2680 session_cache_read=8040
+```
+- `cache_read`: tokens served from cache (priced at 10% of normal input)
+- `cache_create`: tokens written to cache on the first call (priced at 1.25× normal input — recovered on subsequent calls within 5 min)
+- `SessionCacheHitRatio` (in `TokenTracker`): cache_read / (input + cache_read) for the current session
+
+A typical multi-turn coding session sits at 60–80% hit ratio, which translates to ~30% lower bill vs uncached.
 
 ---
 

@@ -48,34 +48,12 @@ namespace BIBIM_MVP
             sb.AppendLine("- Adding new features not present in the original code");
             sb.AppendLine();
 
-            // #5: Include critical defense rules from system prompt to prevent hallucination during auto-fix
-            int revitYear;
-            if (int.TryParse(revitVersion, out revitYear) && revitYear >= 2024)
-            {
-                sb.AppendLine("[CRITICAL - Revit 2024+ API Breaking Changes]");
-                sb.AppendLine("These APIs were REMOVED in Revit 2024. Do NOT introduce them during fix:");
-                sb.AppendLine("- Element.LevelId -> REMOVED. Use: element.get_Parameter(BuiltInParameter.FAMILY_LEVEL_PARAM).AsElementId()");
-                sb.AppendLine("- ElementId.IntegerValue -> REMOVED. Use: elementId.Value (returns Int64)");
-                sb.AppendLine("- CurveLoop(curves) constructor -> DOES NOT EXIST. Use: loop = CurveLoop() then loop.Append(curve)");
-                sb.AppendLine("- Document.PlanTopologies -> REMOVED in 2024");
-                sb.AppendLine();
-                sb.AppendLine("[ABSOLUTE PROHIBITION]");
-                sb.AppendLine("- NEVER use CurveLoop(anything) - CurveLoop() takes NO arguments");
-                sb.AppendLine("- NEVER use element.LevelId - REMOVED");
-                sb.AppendLine("- NEVER use elementId.IntegerValue - use .Value instead");
-                sb.AppendLine();
-            }
+            // The full Revit 2024+ breaking-changes catalogue and "Common API Patterns"
+            // block already live in the codegen system prompt (CodeGenSystemPrompt.Build).
+            // Auto-fix shares that system prompt so we do NOT repeat those rules here —
+            // duplicating them would only inflate the per-attempt user message and break
+            // prompt-cache prefix sharing with the original codegen call.
 
-            sb.AppendLine("[Common API Patterns - MUST USE correct patterns]");
-            sb.AppendLine("- FilteredElementCollector(doc, schedule.Id) for schedule elements");
-            sb.AppendLine("- ExportDWGSettings.GetActivePredefinedSettings(doc) returns SINGLE object, NOT a list");
-            sb.AppendLine("- doc.Export() is read-only, do NOT wrap in Transaction");
-            sb.AppendLine("- Parameter reading: use LookupParameter(name) and check None + HasValue before AsDouble()/AsString()");
-            sb.AppendLine("- XYZ arithmetic in CPython3: use XYZ(a.X+b.X, a.Y+b.Y, a.Z+b.Z), NOT a+b operator");
-            sb.AppendLine("- Wall type access: use doc.GetElement(wall.GetTypeId()) AS WallType, NOT wall.WallType (2025+)");
-            sb.AppendLine("- Do NOT open nested transactions — check if transaction is already active");
-            sb.AppendLine();
-            sb.AppendLine();
             sb.AppendLine("[BLOCKING ISSUES]");
 
             List<ValidationIssue> blockIssues = validation.Issues

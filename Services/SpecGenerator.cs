@@ -27,8 +27,6 @@ namespace BIBIM_MVP
     /// </remarks>
     public static class SpecGenerator
     {
-        private const string ClaudeApiUrl = "https://api.anthropic.com/v1/messages";
-
         private static void LogPerf(string requestId, string step, long elapsedMs, string detail = null)
         {
             if (string.IsNullOrWhiteSpace(requestId)) return;
@@ -440,82 +438,41 @@ TYPE: SPEC|
                     throw new InvalidOperationException("Claude API key not configured");
                 }
 
-                // Build messages list from history
-                var messagesList = new List<object>();
-
+                // Build chat history for ILlmApiClient
+                var llmHistory = new List<ChatMessage>();
                 if (history != null)
                 {
                     foreach (var msg in history)
                     {
-                        if (!ShouldIncludeMessageForSpecification(msg))
-                        {
-                            continue;
-                        }
-
-                        messagesList.Add(new
-                        {
-                            role = msg.IsUser ? "user" : "assistant",
-                            content = msg.Text
-                        });
+                        if (!ShouldIncludeMessageForSpecification(msg)) continue;
+                        llmHistory.Add(msg);
                     }
                 }
+                llmHistory.Add(new ChatMessage { IsUser = true, Text = userRequest });
 
-                // Add the current user request
-                messagesList.Add(new
+                var llmClient = LlmApiClientFactory.Create(claudeApiKey, claudeModel);
+
+                var apiSw = Stopwatch.StartNew();
+                var llmResp = await llmClient.SendMessageAsync(
+                    llmHistory,
+                    GetSpecificationPrompt(revitVersion),
+                    ClaudeApiClient.MaxTokensSpec,
+                    requestId,
+                    "spec_generate",
+                    cancellationToken);
+                apiSw.Stop();
+                LogPerf(requestId, "spec-api", apiSw.ElapsedMilliseconds, "generate");
+
+                if (!llmResp.IsSuccess)
                 {
-                    role = "user",
-                    content = userRequest
-                });
-
-                // Build request body
-                var requestBody = new
-                {
-                    model = claudeModel,
-                    max_tokens = 8192,
-                    system = GetSpecificationPrompt(revitVersion),
-                    messages = messagesList
-                };
-
-                var jsonContent = new StringContent(
-#if NET48
-                    JsonHelper.SerializeCamelCase(requestBody),
-#else
-                    JsonSerializer.Serialize(requestBody),
-#endif
-                    Encoding.UTF8,
-                    "application/json");
-
-                // Call Claude API
-                using (var request = new HttpRequestMessage(HttpMethod.Post, ClaudeApiUrl))
-                {
-                    request.Content = jsonContent;
-                    request.Headers.Add("x-api-key", claudeApiKey);
-                    request.Headers.Add("anthropic-version", "2023-06-01");
-
-                    var apiSw = Stopwatch.StartNew();
-                    using (var response = await ClaudeApiClient._httpClient.SendAsync(request, cancellationToken))
-                    {
-                        apiSw.Stop();
-                        LogPerf(requestId, "spec-api", apiSw.ElapsedMilliseconds, "generate");
-
-                        if (!response.IsSuccessStatusCode)
-                        {
-                            var errorMsg = await response.Content.ReadAsStringAsync();
-                            throw new HttpRequestException($"API Error: {response.StatusCode} - {errorMsg}");
-                        }
-
-                        var responseString = await response.Content.ReadAsStringAsync();
-                        TrackClaudeTokenUsage(responseString, "spec_generate", claudeModel, requestId);
-                        string aiResponse = ExtractTextFromClaudeResponse(responseString);
-
-                        // Parse the specification from the response
-                        var spec = ParseSpecificationResponse(aiResponse);
-                        spec.OriginalRequest = userRequest;
-
-                        Log($"GenerateSpecificationAsync: Generated spec {spec.SpecId} with {spec.ClarifyingQuestions.Count} questions");
-                        return spec;
-                    }
+                    throw new HttpRequestException(llmResp.ErrorMessage ?? "Empty response from LLM");
                 }
+
+                var spec = ParseSpecificationResponse(llmResp.Text);
+                spec.OriginalRequest = userRequest;
+
+                Log($"GenerateSpecificationAsync: Generated spec {spec.SpecId} with {spec.ClarifyingQuestions.Count} questions");
+                return spec;
             }
             catch (Exception ex)
             {
@@ -527,49 +484,6 @@ TYPE: SPEC|
                 totalSw.Stop();
                 LogPerf(requestId, "spec", totalSw.ElapsedMilliseconds, "generate");
             }
-        }
-
-        /// <summary>
-        /// Extracts text content from Claude API response.
-        /// </summary>
-        private static string ExtractTextFromClaudeResponse(string responseString)
-        {
-#if NET48
-            var responseObj = JObject.Parse(responseString);
-            var content = responseObj["content"];
-            if (content != null && content.HasValues)
-            {
-                var textBuilder = new StringBuilder();
-                foreach (var block in content)
-                {
-                    if (block["type"]?.ToString() == "text" && block["text"] != null)
-                    {
-                        textBuilder.Append(block["text"].ToString());
-                    }
-                }
-                return textBuilder.ToString().Trim();
-            }
-            return string.Empty;
-#else
-            using (JsonDocument doc = JsonDocument.Parse(responseString))
-            {
-                if (doc.RootElement.TryGetProperty("content", out var content) && content.GetArrayLength() > 0)
-                {
-                    var textBuilder = new StringBuilder();
-                    foreach (var block in content.EnumerateArray())
-                    {
-                        if (block.TryGetProperty("type", out var typeProp) &&
-                            typeProp.GetString() == "text" &&
-                            block.TryGetProperty("text", out var textProp))
-                        {
-                            textBuilder.Append(textProp.GetString());
-                        }
-                    }
-                    return textBuilder.ToString().Trim();
-                }
-            }
-            return string.Empty;
-#endif
         }
 
         /// <summary>
@@ -1268,89 +1182,48 @@ TYPE: SPEC|
 
 Please revise the specification based on the user's feedback.";
 
-                // Build messages list with conversation history
-                var messagesList = new List<object>();
-
-                // Add conversation history for context
+                // Build chat history for ILlmApiClient
+                var llmHistory = new List<ChatMessage>();
                 if (conversationHistory != null)
                 {
                     foreach (var msg in conversationHistory)
                     {
-                        if (!ShouldIncludeMessageForSpecification(msg))
-                        {
-                            continue;
-                        }
-
-                        messagesList.Add(new
-                        {
-                            role = msg.IsUser ? "user" : "assistant",
-                            content = msg.Text
-                        });
+                        if (!ShouldIncludeMessageForSpecification(msg)) continue;
+                        llmHistory.Add(msg);
                     }
                 }
+                llmHistory.Add(new ChatMessage { IsUser = true, Text = revisionMessage });
 
-                // Add the revision message
-                messagesList.Add(new
+                var llmClient = LlmApiClientFactory.Create(claudeApiKey, claudeModel);
+
+                var apiSw = Stopwatch.StartNew();
+                var llmResp = await llmClient.SendMessageAsync(
+                    llmHistory,
+                    GetRevisionPrompt(revitVersion),
+                    ClaudeApiClient.MaxTokensSpec,
+                    requestId,
+                    "spec_revise",
+                    cancellationToken);
+                apiSw.Stop();
+                LogPerf(requestId, "spec-api", apiSw.ElapsedMilliseconds, "revise");
+
+                if (!llmResp.IsSuccess)
                 {
-                    role = "user",
-                    content = revisionMessage
-                });
-
-                // Build request body
-                var requestBody = new
-                {
-                    model = claudeModel,
-                    max_tokens = 8192,
-                    system = GetRevisionPrompt(revitVersion),
-                    messages = messagesList
-                };
-
-                var jsonContent = new StringContent(
-#if NET48
-                    JsonHelper.SerializeCamelCase(requestBody),
-#else
-                    JsonSerializer.Serialize(requestBody),
-#endif
-                    Encoding.UTF8,
-                    "application/json");
-
-                // Call Claude API
-                using (var request = new HttpRequestMessage(HttpMethod.Post, ClaudeApiUrl))
-                {
-                    request.Content = jsonContent;
-                    request.Headers.Add("x-api-key", claudeApiKey);
-                    request.Headers.Add("anthropic-version", "2023-06-01");
-
-                    var apiSw = Stopwatch.StartNew();
-                    var response = await ClaudeApiClient._httpClient.SendAsync(request, cancellationToken);
-                    apiSw.Stop();
-                    LogPerf(requestId, "spec-api", apiSw.ElapsedMilliseconds, "revise");
-
-                    if (!response.IsSuccessStatusCode)
-                    {
-                        var errorMsg = await response.Content.ReadAsStringAsync();
-                        throw new HttpRequestException($"API Error: {response.StatusCode} - {errorMsg}");
-                    }
-
-                    var responseString = await response.Content.ReadAsStringAsync();
-                    TrackClaudeTokenUsage(responseString, "spec_revise", claudeModel, requestId);
-                    string aiResponse = ExtractTextFromClaudeResponse(responseString);
-
-                    // Parse the specification from the response
-                    var revisedSpec = ParseSpecificationResponse(aiResponse);
-
-                    // CRITICAL: Preserve OriginalRequest from input spec (Property 7, Requirement 5.1)
-                    revisedSpec.OriginalRequest = currentSpec.OriginalRequest;
-
-                    // CRITICAL: Increment RevisionNumber (Property 8, Requirement 3.3)
-                    revisedSpec.RevisionNumber = currentSpec.RevisionNumber + 1;
-
-                    // Update timestamp for the revision
-                    revisedSpec.CreatedAt = DateTime.UtcNow;
-
-                    Log($"ReviseSpecificationAsync: Revised spec {revisedSpec.SpecId} to revision {revisedSpec.RevisionNumber}");
-                    return revisedSpec;
+                    throw new HttpRequestException(llmResp.ErrorMessage ?? "Empty response from LLM");
                 }
+
+                var revisedSpec = ParseSpecificationResponse(llmResp.Text);
+
+                // Preserve OriginalRequest from input spec (Property 7, Requirement 5.1)
+                revisedSpec.OriginalRequest = currentSpec.OriginalRequest;
+
+                // Increment RevisionNumber (Property 8, Requirement 3.3)
+                revisedSpec.RevisionNumber = currentSpec.RevisionNumber + 1;
+
+                revisedSpec.CreatedAt = DateTime.UtcNow;
+
+                Log($"ReviseSpecificationAsync: Revised spec {revisedSpec.SpecId} to revision {revisedSpec.RevisionNumber}");
+                return revisedSpec;
             }
             catch (Exception ex)
             {
@@ -1445,40 +1318,6 @@ Please revise the specification based on the user's feedback.";
         private static string GetClaudeApiKey()
         {
             return ClaudeApiClient.GetClaudeApiKey();
-        }
-
-        /// <summary>
-        /// Parses Claude API response JSON for usage tokens and tracks them.
-        /// </summary>
-        private static void TrackClaudeTokenUsage(string responseString, string callType, string model, string requestId)
-        {
-            try
-            {
-#if NET48
-                var responseObj = JObject.Parse(responseString);
-                var usage = responseObj["usage"];
-                if (usage != null)
-                {
-                    int inTok = usage["input_tokens"]?.Value<int>() ?? 0;
-                    int outTok = usage["output_tokens"]?.Value<int>() ?? 0;
-                    TokenTracker.Track(callType, "claude", model, inTok, outTok, requestId);
-                }
-#else
-                using (JsonDocument doc = JsonDocument.Parse(responseString))
-                {
-                    if (doc.RootElement.TryGetProperty("usage", out var usage))
-                    {
-                        int inTok = usage.TryGetProperty("input_tokens", out var inP) ? inP.GetInt32() : 0;
-                        int outTok = usage.TryGetProperty("output_tokens", out var outP) ? outP.GetInt32() : 0;
-                        TokenTracker.Track(callType, "claude", model, inTok, outTok, requestId);
-                    }
-                }
-#endif
-            }
-            catch (Exception ex)
-            {
-                Log($"TrackClaudeTokenUsage error: {ex.Message}");
-            }
         }
 
         private static void Log(string message)

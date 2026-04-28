@@ -9,12 +9,14 @@ We built this open source to eliminate the repetitive manual work that BIM engin
 Search existing issues before filing. If you're reporting something new, include all of the following:
 
 1. **Revit version, Dynamo version, and BIBIM version**
-2. **The prompt that triggered the issue** — paste it verbatim
-3. **Debug log** (required): `%APPDATA%\BIBIM\logs\bibim_debug.txt`
-4. **Codegen output folder** (if applicable): `%AppData%\BIBIM\debug\codegen\YYYYMMDD\`
-   — redact any sensitive project data before attaching
+2. **The active model** (Settings → API Key Settings) — Anthropic / OpenAI / Gemini behave differently in edge cases
+3. **The prompt that triggered the issue** — paste it verbatim
+4. **Debug log** (required): `%APPDATA%\BIBIM\logs\bibim_debug.txt` (rotates at 5 MB; the previous log is at `%APPDATA%\BIBIM\logs\bibim_debug.txt.old`)
+5. **Generated code or analysis output** — paste the relevant snippet from the chat panel directly into the issue (redact any sensitive project data first)
 
 Issues filed without logs may be deprioritized or closed.
+
+If the issue is a token-cost / cache-effectiveness regression, also paste the last `[TokenTracker]` log lines — they contain `cache_create=` / `cache_read=` numbers that pin down whether prompt caching was hitting.
 
 If the extension fails to load, the Dynamo/Revit journal log usually has the reason:
 ```

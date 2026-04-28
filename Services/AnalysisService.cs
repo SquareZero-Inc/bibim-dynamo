@@ -61,35 +61,24 @@ namespace BIBIM_MVP
                 LogAnalysis(requestId, $"graph JSON serialized - length={graphJson?.Length ?? 0}");
 
                 var config = ConfigService.GetRagConfig();
-                string ragStore = config.RagStore;
                 string revitVersion = config.RevitVersion;
                 string dynamoVersion = config.DynamoVersion;
 
-                // Phase 2: 40% - RAG fetch via Gemini File Search
+                // Phase 2: 40% - Local BM25 RAG over RevitAPI.xml
                 progressCallback?.Invoke(40, LocalizationService.Get("Pipeline_Phase_Rag"));
 
                 string ragContext = "";
-                string geminiApiKey = GetGeminiApiKey();
-                if (!string.IsNullOrEmpty(geminiApiKey) && !string.IsNullOrEmpty(ragStore))
+                try
                 {
                     string ragQueryText = BuildRagQueryText(graphData);
-                    var ragResult = await RagService.FetchRelevantApiDocsAsync(
-                        geminiApiKey, ragQueryText, ragStore, revitVersion,
-                        config.GeminiModel, requestId);
-
-                    if (ragResult.IsSuccess)
-                    {
-                        ragContext = ragResult.ContextText;
-                        LogAnalysis(requestId, $"RAG fetch success - context length={ragContext.Length}");
-                    }
-                    else
-                    {
-                        LogAnalysis(requestId, $"RAG fetch skipped: status={ragResult.Status} {ragResult.ErrorSummary}");
-                    }
+                    ragContext = await LocalDynamoRagService.FetchContextAsync(
+                        ragQueryText, revitVersion, cancellationToken);
+                    LogAnalysis(requestId, $"Local RAG context length={ragContext?.Length ?? 0}");
                 }
-                else
+                catch (Exception ragEx)
                 {
-                    LogAnalysis(requestId, "Gemini key or RAG store not configured - proceeding without RAG");
+                    LogAnalysis(requestId, $"Local RAG failed (non-fatal): {ragEx.Message}");
+                    ragContext = string.Empty;
                 }
 
                 // Phase 3: 60% - Claude API call
@@ -191,13 +180,15 @@ namespace BIBIM_MVP
         /// </summary>
         private static string SerializeGraphData(GraphAnalysisData data)
         {
+            // Compact JSON — the LLM does not benefit from indentation, and large graphs
+            // bloat ~30% with whitespace.
 #if NET48
-            return Newtonsoft.Json.JsonConvert.SerializeObject(data, Newtonsoft.Json.Formatting.Indented, 
+            return Newtonsoft.Json.JsonConvert.SerializeObject(data, Newtonsoft.Json.Formatting.None,
                 new Newtonsoft.Json.JsonSerializerSettings { NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore });
 #else
             return JsonSerializer.Serialize(data, new JsonSerializerOptions
             {
-                WriteIndented = true,
+                WriteIndented = false,
                 DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
             });
 #endif
@@ -525,7 +516,6 @@ At the end, provide: ""예상 수정 시간: [X분]"" based on issue complexity.
             }
         }
 
-        private static string GetGeminiApiKey() => RagService.GetGeminiApiKey();
     }
 
     #region Analysis Result Models

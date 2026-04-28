@@ -532,7 +532,7 @@ namespace BIBIM_MVP
                     return;
                 }
 
-                RecordSuccessfulTurn(userMessage, result.RawResponse);
+                RecordSuccessfulTurn(userMessage, result.RawResponse, CompressCodegenForHistory(result.RawResponse));
 
 
                 ProcessAndDisplayResponse(result, requestId);
@@ -856,7 +856,7 @@ namespace BIBIM_MVP
                 // Call GeminiService with spec-enhanced prompt
                 GenerationResult result = await _pipeline.RunAsync(messages, requestId, _requestCts?.Token ?? default);
 
-                RecordSuccessfulTurn(specPrompt, result.RawResponse);
+                RecordSuccessfulTurn(specPrompt, result.RawResponse, CompressCodegenForHistory(result.RawResponse));
 
                 ProcessAndDisplayResponse(result, requestId);
 
@@ -1122,7 +1122,7 @@ namespace BIBIM_MVP
 
                 // Add user message to history then record the turn (matches all other success paths)
                 _conversationHistory.Add(new ChatMessage { Text = retryContext.OriginalUserMessage, IsUser = true });
-                RecordSuccessfulTurn(retryContext.OriginalUserMessage, result.RawResponse);
+                RecordSuccessfulTurn(retryContext.OriginalUserMessage, result.RawResponse, CompressCodegenForHistory(result.RawResponse));
                 _contextManager?.ClearPendingRetry();
 
                 // Track successful retry
@@ -1286,6 +1286,14 @@ namespace BIBIM_MVP
             }
         }
 
+        /// <summary>
+        /// Sliding-window cap on how many messages we send to the LLM per call.
+        /// Older turns stay in <c>_conversationHistory</c> for UI / persistence, but the
+        /// API payload is trimmed to the most recent N messages so input-token cost
+        /// does not grow unbounded across long sessions. 20 messages ≈ 10 user turns.
+        /// </summary>
+        private const int MaxApiHistoryMessages = 20;
+
         // Builds the message list for the API pipeline.
         // Side-effect: appends currentMessage to _conversationHistory — call exactly once per user turn.
         private List<ChatMessage> BuildMessageHistory(string currentMessage)
@@ -1293,22 +1301,34 @@ namespace BIBIM_MVP
             var currentMsg = new ChatMessage { Text = currentMessage, IsUser = true };
             _conversationHistory.Add(currentMsg);
 
-            var messages = new List<ChatMessage>(_conversationHistory);
+            // Send only the trailing window. _conversationHistory itself is not trimmed
+            // — the UI and persistence layers still see the full conversation.
+            int total = _conversationHistory.Count;
+            int skip = total > MaxApiHistoryMessages ? total - MaxApiHistoryMessages : 0;
+            var messages = new List<ChatMessage>(_conversationHistory.Count - skip);
+            for (int i = skip; i < total; i++)
+            {
+                messages.Add(_conversationHistory[i]);
+            }
             return messages;
         }
         
         /// <summary>
-        /// Get conversation history from ConversationContextManager for SpecGenerator.
-        /// Returns a List of ChatMessage objects representing the current conversation.
+        /// Returns the same trailing-window slice of <c>_conversationHistory</c> used by
+        /// <see cref="BuildMessageHistory"/>, so spec generation/revision sees the same
+        /// bounded API payload as code generation. SpecGenerator appends the current
+        /// user request inside the method, so we leave one slot for it (window cap −1).
         /// </summary>
         private List<ChatMessage> GetConversationHistoryForSpec()
         {
-            var messages = new List<ChatMessage>();
-            
-            // _conversationHistory를 단일 소스로 사용 (항상 최신 상태 유지)
-            // _contextManager는 에러 복구/세션 저장 용도로만 사용
-            messages.AddRange(_conversationHistory);
-            
+            int total = _conversationHistory.Count;
+            int cap = MaxApiHistoryMessages - 1;          // SpecGenerator adds 1 more
+            int skip = total > cap ? total - cap : 0;
+            var messages = new List<ChatMessage>(total - skip);
+            for (int i = skip; i < total; i++)
+            {
+                messages.Add(_conversationHistory[i]);
+            }
             return messages;
         }
         
@@ -1334,6 +1354,42 @@ namespace BIBIM_MVP
                 _contextManager.AddTurn(userMessage, contextResponse, isError: false);
                 _contextManager.SaveSession();
             }
+        }
+
+        /// <summary>
+        /// Builds a compact history representation of a codegen response. Strips the full
+        /// Python body (often 2500-4000 tokens) but keeps the GUIDE section so the
+        /// assistant retains context about what was just produced. Falls back to the
+        /// raw response when no <c>TYPE: CODE|</c> marker is present.
+        /// </summary>
+        private static string CompressCodegenForHistory(string rawResponse)
+        {
+            if (string.IsNullOrEmpty(rawResponse)) return rawResponse;
+
+            const string codeMarker = "TYPE: CODE|";
+            const string guideMarker = "TYPE: GUIDE|";
+
+            int codeIdx = rawResponse.IndexOf(codeMarker, StringComparison.Ordinal);
+            if (codeIdx < 0) return rawResponse;
+
+            int guideIdx = rawResponse.IndexOf(guideMarker, StringComparison.Ordinal);
+            string codeSection;
+            string guideSection = string.Empty;
+
+            if (guideIdx > codeIdx)
+            {
+                codeSection = rawResponse.Substring(codeIdx + codeMarker.Length, guideIdx - codeIdx - codeMarker.Length);
+                guideSection = rawResponse.Substring(guideIdx);
+            }
+            else
+            {
+                codeSection = rawResponse.Substring(codeIdx + codeMarker.Length);
+            }
+
+            int lineCount = codeSection.Split('\n').Length;
+            string summary = $"{codeMarker}[Generated Dynamo Python script — ~{lineCount} lines, applied to canvas]";
+
+            return string.IsNullOrEmpty(guideSection) ? summary : summary + "\n" + guideSection;
         }
 
         /// <summary>

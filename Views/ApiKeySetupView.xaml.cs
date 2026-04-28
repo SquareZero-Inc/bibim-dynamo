@@ -1,64 +1,117 @@
 // Copyright (c) 2026 SquareZero Inc. - Licensed under Apache 2.0. See LICENSE in the repo root.
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Reflection;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Navigation;
-#if NET48
-using Newtonsoft.Json.Linq;
-#else
-using System.Text.Json;
-using System.Text.Json.Nodes;
-#endif
 
 namespace BIBIM_MVP
 {
     /// <summary>
-    /// BYOK settings dialog: Claude + Gemini API keys and model selection.
-    /// Saves to rag_config.json and invalidates ConfigService cache.
+    /// BYOK settings dialog: per-provider API keys (Anthropic / OpenAI / Gemini)
+    /// + a single active-model radio group. Models without a key for their provider
+    /// are disabled with a tooltip prompting the user to add the matching key.
     /// </summary>
     public partial class ApiKeySetupView : Window
     {
-        // Sentinel shown in PasswordBox when key already exists — never written to config
-        private const string KeyPlaceholder = "sk-ant-••••••••••••••••";
-        private const string GeminiPlaceholder = "AIza•••••••••••••••••••";
-        private string _existingClaudeKey;
+        // Sentinels shown in PasswordBoxes when a key is already saved. Never written to config.
+        private const string AnthropicSentinel = "sk-ant-••••••••••••••••";
+        private const string OpenAISentinel    = "sk-••••••••••••••••";
+        private const string GeminiSentinel    = "AIza•••••••••••••••••";
+
+        private string _existingAnthropicKey;
+        private string _existingOpenAIKey;
         private string _existingGeminiKey;
 
         public ApiKeySetupView()
         {
             InitializeComponent();
+            ApplyLocalization();
             PreFillValues();
+            UpdateModelGating();
+        }
+
+        /// <summary>
+        /// Applies localised strings to every visible label, button, and description in
+        /// the dialog. The XAML carries x:Name placeholders only — no hard-coded English.
+        /// </summary>
+        private void ApplyLocalization()
+        {
+            try
+            {
+                Title                       = LocalizationService.Get("ApiKeySetup_WindowTitle");
+                MainTitleText.Text          = LocalizationService.Get("ApiKeySetup_MainTitle");
+                GuideButton.Content         = LocalizationService.Get("ApiKey_GuideLinkText");
+
+                AnthropicSectionTitle.Text  = LocalizationService.Get("ApiKeySetup_SectionAnthropic");
+                OpenAISectionTitle.Text     = LocalizationService.Get("ApiKeySetup_SectionOpenAI");
+                GeminiSectionTitle.Text     = LocalizationService.Get("ApiKeySetup_SectionGemini");
+
+                AnthropicDescPrefix.Text    = LocalizationService.Get("ApiKeySetup_AnthropicDesc");
+                OpenAIDescPrefix.Text       = LocalizationService.Get("ApiKeySetup_OpenAIDesc");
+                GeminiDescPrefix.Text       = LocalizationService.Get("ApiKeySetup_GeminiDesc");
+
+                ActiveModelTitle.Text       = LocalizationService.Get("ApiKeySetup_ActiveModelTitle");
+                ActiveModelDesc.Text        = LocalizationService.Get("ApiKeySetup_ActiveModelDesc");
+
+                ModelNoteSonnet46.Text      = LocalizationService.Get("ApiKeySetup_ModelNote_Sonnet46");
+                ModelNoteOpus47.Text        = LocalizationService.Get("ApiKeySetup_ModelNote_Opus47");
+                ModelNoteGpt55.Text         = LocalizationService.Get("ApiKeySetup_ModelNote_Gpt55");
+                ModelNoteGemini31.Text      = LocalizationService.Get("ApiKeySetup_ModelNote_Gemini31");
+
+                // Localized speed tooltips on each model radio (icons in XAML are universal).
+                ModelSonnet46.ToolTip       = LocalizationService.Get("ApiKeySetup_ModelSpeed_Fast");
+                ModelOpus47.ToolTip         = LocalizationService.Get("ApiKeySetup_ModelSpeed_Medium");
+                ModelGpt55.ToolTip          = LocalizationService.Get("ApiKeySetup_ModelSpeed_Medium");
+                ModelGemini31.ToolTip       = LocalizationService.Get("ApiKeySetup_ModelSpeed_Slow");
+
+                CancelButton.Content        = LocalizationService.Get("ApiKeySetup_ButtonCancel");
+                SaveButton.Content          = LocalizationService.Get("ApiKeySetup_ButtonSave");
+            }
+            catch (Exception ex)
+            {
+                // If localization fails, fall back to whatever text is already present.
+                Logger.LogError("ApiKeySetupView.ApplyLocalization", ex);
+            }
+        }
+
+        private void GuideButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                string url = LocalizationService.Get("ApiKey_GuideUrl");
+                if (string.IsNullOrWhiteSpace(url)) return;
+                Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                Logger.Log("ApiKeySetupView.GuideButton_Click", $"Failed to open guide: {ex.Message}");
+            }
         }
 
         private void PreFillValues()
         {
             try
             {
-                _existingClaudeKey = ClaudeApiClient.GetClaudeApiKey();
-                if (!string.IsNullOrEmpty(_existingClaudeKey))
-                {
-                    ApiKeyBox.Password = KeyPlaceholder;
-                    ClaudeModelCombo.IsEnabled = true;
-                }
-
                 var config = ConfigService.GetRagConfig();
-                if (config == null) return;
 
-                _existingGeminiKey = config.GeminiApiKey;
-                if (!string.IsNullOrEmpty(_existingGeminiKey))
-                {
-                    GeminiApiKeyBox.Password = GeminiPlaceholder;
-                    GeminiModelCombo.IsEnabled = true;
-                }
+                _existingAnthropicKey = ConfigService.GetApiKeyForProvider(config, LlmApiClientFactory.ProviderAnthropic);
+                _existingOpenAIKey    = ConfigService.GetApiKeyForProvider(config, LlmApiClientFactory.ProviderOpenAI);
+                _existingGeminiKey    = ConfigService.GetApiKeyForProvider(config, LlmApiClientFactory.ProviderGemini);
 
-                if (!string.IsNullOrEmpty(config.ClaudeModel))
-                    SelectComboByTag(ClaudeModelCombo, config.ClaudeModel);
+                if (!string.IsNullOrEmpty(_existingAnthropicKey)) AnthropicKeyBox.Password = AnthropicSentinel;
+                if (!string.IsNullOrEmpty(_existingOpenAIKey))    OpenAIKeyBox.Password    = OpenAISentinel;
+                if (!string.IsNullOrEmpty(_existingGeminiKey))    GeminiKeyBox.Password    = GeminiSentinel;
 
-                if (!string.IsNullOrEmpty(config.GeminiModel))
-                    SelectComboByTag(GeminiModelCombo, config.GeminiModel);
+                UpdateStatusBadges();
+
+                // Select the saved active model, falling back to default.
+                string activeModel = !string.IsNullOrEmpty(config?.ClaudeModel)
+                    ? config.ClaudeModel
+                    : ConfigService.DefaultModelId;
+                SelectModelByTag(activeModel);
             }
             catch (Exception ex)
             {
@@ -66,65 +119,145 @@ namespace BIBIM_MVP
             }
         }
 
-        private static void SelectComboByTag(System.Windows.Controls.ComboBox combo, string tagValue)
+        private void UpdateStatusBadges()
         {
-            foreach (System.Windows.Controls.ComboBoxItem item in combo.Items)
+            string saved = LocalizationService.Get("ApiKeySetup_BadgeSaved");
+            AnthropicStatusBadge.Text = string.IsNullOrEmpty(_existingAnthropicKey) ? string.Empty : saved;
+            OpenAIStatusBadge.Text    = string.IsNullOrEmpty(_existingOpenAIKey)    ? string.Empty : saved;
+            GeminiStatusBadge.Text    = string.IsNullOrEmpty(_existingGeminiKey)    ? string.Empty : saved;
+        }
+
+        private void SelectModelByTag(string modelId)
+        {
+            if (string.IsNullOrEmpty(modelId)) return;
+            foreach (var rb in AllModelRadios())
             {
-                if (item.Tag?.ToString() == tagValue)
+                if (string.Equals(rb.Tag?.ToString(), modelId, StringComparison.Ordinal))
                 {
-                    item.IsSelected = true;
+                    rb.IsChecked = true;
                     return;
                 }
             }
         }
 
-        private static string GetSelectedTag(System.Windows.Controls.ComboBox combo, string fallback)
+        private string SelectedModelTag()
         {
-            return (combo.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Tag?.ToString() ?? fallback;
+            var rb = AllModelRadios().FirstOrDefault(r => r.IsChecked == true);
+            return rb?.Tag?.ToString() ?? ConfigService.DefaultModelId;
         }
 
-        private void ClaudeKey_Changed(object sender, RoutedEventArgs e)
+        private IEnumerable<System.Windows.Controls.RadioButton> AllModelRadios()
         {
-            if (ClaudeModelCombo != null)
-                ClaudeModelCombo.IsEnabled = ApiKeyBox.Password.Length > 0;
-            if (ErrorText != null)
-                ErrorText.Visibility = Visibility.Collapsed;
+            yield return ModelSonnet46;
+            yield return ModelOpus47;
+            yield return ModelGpt55;
+            yield return ModelGemini31;
+        }
+
+        // ── Key change handlers — re-evaluate model gating each time ─────────
+
+        private void AnthropicKey_Changed(object sender, RoutedEventArgs e)
+        {
+            UpdateModelGating();
+            HideError();
+        }
+
+        private void OpenAIKey_Changed(object sender, RoutedEventArgs e)
+        {
+            UpdateModelGating();
+            HideError();
         }
 
         private void GeminiKey_Changed(object sender, RoutedEventArgs e)
         {
-            if (GeminiModelCombo != null)
-                GeminiModelCombo.IsEnabled = GeminiApiKeyBox.Password.Length > 0;
+            UpdateModelGating();
+            HideError();
         }
+
+        /// <summary>
+        /// A provider counts as "has key" if the user typed something OR the existing key
+        /// is still represented by its sentinel. Updates each radio's IsEnabled and tooltip.
+        /// </summary>
+        private void UpdateModelGating()
+        {
+            bool hasAnthropic = HasKey(AnthropicKeyBox.Password, AnthropicSentinel, _existingAnthropicKey);
+            bool hasOpenAI    = HasKey(OpenAIKeyBox.Password,    OpenAISentinel,    _existingOpenAIKey);
+            bool hasGemini    = HasKey(GeminiKeyBox.Password,    GeminiSentinel,    _existingGeminiKey);
+
+            ApplyGating(ModelSonnet46, hasAnthropic, "Anthropic");
+            ApplyGating(ModelOpus47,   hasAnthropic, "Anthropic");
+            ApplyGating(ModelGpt55,    hasOpenAI,    "OpenAI");
+            ApplyGating(ModelGemini31, hasGemini,    "Gemini");
+
+            // If the currently checked model just got disabled, fall back to a usable one.
+            var checkedRb = AllModelRadios().FirstOrDefault(r => r.IsChecked == true);
+            if (checkedRb != null && checkedRb.IsEnabled == false)
+            {
+                var firstEnabled = AllModelRadios().FirstOrDefault(r => r.IsEnabled);
+                if (firstEnabled != null) firstEnabled.IsChecked = true;
+            }
+        }
+
+        private static bool HasKey(string boxText, string sentinel, string existingKey)
+        {
+            if (string.IsNullOrWhiteSpace(boxText)) return false;
+            if (boxText == sentinel) return !string.IsNullOrEmpty(existingKey);
+            return true;
+        }
+
+        private static void ApplyGating(System.Windows.Controls.RadioButton rb, bool enabled, string providerName)
+        {
+            rb.IsEnabled = enabled;
+            rb.ToolTip = enabled ? null : LocalizationService.Format("ApiKeySetup_LockedTooltip", providerName);
+        }
+
+        // ── Save / Cancel ────────────────────────────────────────────────────
 
         private void SaveButton_Click(object sender, RoutedEventArgs e) => TrySave();
 
         private void TrySave()
         {
-            string claudeKey = ApiKeyBox.Password?.Trim();
-            // Resolve sentinel: user did not change the existing key
-            if (claudeKey == KeyPlaceholder) claudeKey = _existingClaudeKey;
-            if (string.IsNullOrEmpty(claudeKey))
-            {
-                ShowError(LocalizationService.Get("ApiKey_ClaudeKeyRequired"));
-                return;
-            }
-            if (!claudeKey.StartsWith("sk-ant-"))
+            string anthropicKey = ResolveKey(AnthropicKeyBox.Password, AnthropicSentinel, _existingAnthropicKey);
+            string openAIKey    = ResolveKey(OpenAIKeyBox.Password,    OpenAISentinel,    _existingOpenAIKey);
+            string geminiKey    = ResolveKey(GeminiKeyBox.Password,    GeminiSentinel,    _existingGeminiKey);
+
+            // Format checks (prefix only — actual validity is detected on the first call).
+            if (!string.IsNullOrEmpty(anthropicKey) && !anthropicKey.StartsWith("sk-ant-"))
             {
                 ShowError(LocalizationService.Get("ApiKey_InvalidFormat"));
                 return;
             }
+            if (!string.IsNullOrEmpty(openAIKey) && !openAIKey.StartsWith("sk-"))
+            {
+                ShowError(LocalizationService.Get("ApiKey_OpenAIInvalidFormat"));
+                return;
+            }
+            if (!string.IsNullOrEmpty(geminiKey) && !geminiKey.StartsWith("AIza"))
+            {
+                ShowError(LocalizationService.Get("ApiKey_GeminiInvalidFormat"));
+                return;
+            }
 
-            string geminiKey = GeminiApiKeyBox.Password?.Trim();
-            if (geminiKey == GeminiPlaceholder) geminiKey = _existingGeminiKey;
-            if (geminiKey == GeminiPlaceholder) geminiKey = _existingGeminiKey;
-            string claudeModel = GetSelectedTag(ClaudeModelCombo, "claude-sonnet-4-6");
-            string geminiModel = GetSelectedTag(GeminiModelCombo, "gemini-2.5-flash-lite");
+            string activeModel = SelectedModelTag();
+            string requiredProvider = LlmApiClientFactory.ResolveProviderForModel(activeModel);
+            string requiredKey =
+                requiredProvider == LlmApiClientFactory.ProviderOpenAI ? openAIKey :
+                requiredProvider == LlmApiClientFactory.ProviderGemini ? geminiKey :
+                                                                          anthropicKey;
+            if (string.IsNullOrEmpty(requiredKey))
+            {
+                ShowError(LocalizationService.Format("ApiKey_KeyMissingForActiveModel", requiredProvider));
+                return;
+            }
 
             try
             {
-                SaveSettings(claudeKey, geminiKey, claudeModel, geminiModel);
-                ConfigService.ClearCache();
+                // Save each provider's key (empty string clears it).
+                ConfigService.SaveApiKeyForProvider(LlmApiClientFactory.ProviderAnthropic, anthropicKey ?? string.Empty);
+                ConfigService.SaveApiKeyForProvider(LlmApiClientFactory.ProviderOpenAI,    openAIKey    ?? string.Empty);
+                ConfigService.SaveApiKeyForProvider(LlmApiClientFactory.ProviderGemini,    geminiKey    ?? string.Empty);
+                ConfigService.SetActiveModel(activeModel);
+
                 DialogResult = true;
                 Close();
             }
@@ -132,6 +265,13 @@ namespace BIBIM_MVP
             {
                 ShowError(string.Format(LocalizationService.Get("ApiKey_SaveFailed"), ex.Message));
             }
+        }
+
+        private static string ResolveKey(string boxText, string sentinel, string existingKey)
+        {
+            if (string.IsNullOrWhiteSpace(boxText)) return null;
+            if (boxText == sentinel) return existingKey;
+            return boxText.Trim();
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
@@ -159,43 +299,9 @@ namespace BIBIM_MVP
             ErrorText.Visibility = Visibility.Visible;
         }
 
-        private static void SaveSettings(string claudeApiKey, string geminiApiKey, string claudeModel, string geminiModel)
+        private void HideError()
         {
-            string assemblyDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string configPath = Path.Combine(assemblyDir, "rag_config.json");
-
-            string json;
-            if (File.Exists(configPath))
-                json = File.ReadAllText(configPath);
-            else
-            {
-                string templatePath = Path.Combine(assemblyDir, "rag_config.template.json");
-                json = File.Exists(templatePath) ? File.ReadAllText(templatePath) : "{}";
-            }
-
-#if NET48
-            var obj = JObject.Parse(json);
-            if (obj["api_keys"] == null)
-                obj["api_keys"] = new JObject();
-            obj["api_keys"]["claude_api_key"] = claudeApiKey;
-            obj["api_keys"]["gemini_api_key"] = geminiApiKey ?? "";
-            obj["claude_model"] = claudeModel;
-            obj["gemini_model"] = geminiModel;
-            File.WriteAllText(configPath, obj.ToString(Newtonsoft.Json.Formatting.Indented));
-#else
-            var node = JsonNode.Parse(json) as JsonObject ?? new JsonObject();
-            if (node["api_keys"] is not JsonObject apiKeys)
-            {
-                apiKeys = new JsonObject();
-                node["api_keys"] = apiKeys;
-            }
-            apiKeys["claude_api_key"] = claudeApiKey;
-            apiKeys["gemini_api_key"] = geminiApiKey ?? "";
-            node["claude_model"] = claudeModel;
-            node["gemini_model"] = geminiModel;
-            var options = new JsonSerializerOptions { WriteIndented = true };
-            File.WriteAllText(configPath, node.ToJsonString(options));
-#endif
+            if (ErrorText != null) ErrorText.Visibility = Visibility.Collapsed;
         }
     }
 }

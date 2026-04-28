@@ -1,8 +1,7 @@
 <Window x:Class="BIBIM_MVP.ApiKeySetupView"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="BIBIM — API Keys &amp; Models"
-        Width="480" Height="560"
+        Width="540" Height="720"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner"
         Background="#1E1E1E">
@@ -21,51 +20,26 @@
             <Setter Property="Margin" Value="0,0,0,6"/>
             <Setter Property="TextWrapping" Value="Wrap"/>
         </Style>
-        <Style x:Key="DarkCombo" TargetType="ComboBox">
+        <Style x:Key="DarkPasswordBox" TargetType="PasswordBox">
             <Setter Property="Background" Value="#2D2D30"/>
             <Setter Property="Foreground" Value="#E1E1E1"/>
+            <Setter Property="CaretBrush" Value="#E1E1E1"/>
             <Setter Property="BorderBrush" Value="#3E3E42"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Height" Value="32"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+        </Style>
+        <Style x:Key="ModelRadio" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="#E1E1E1"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="FontFamily" Value="Pretendard, Malgun Gothic, Segoe UI"/>
-            <Setter Property="Padding" Value="8,4"/>
-            <Setter Property="Margin" Value="0,0,0,0"/>
-            <Setter Property="ItemContainerStyle">
-                <Setter.Value>
-                    <Style TargetType="ComboBoxItem">
-                        <Setter Property="Foreground" Value="#E1E1E1"/>
-                        <Setter Property="Background" Value="#2D2D30"/>
-                        <Setter Property="Padding" Value="8,5"/>
-                        <Setter Property="FontSize" Value="13"/>
-                        <Setter Property="FontFamily" Value="Pretendard, Malgun Gothic, Segoe UI"/>
-                        <Style.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#3E3E42"/>
-                                <Setter Property="Foreground" Value="#FFFFFF"/>
-                            </Trigger>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="#0078D4"/>
-                                <Setter Property="Foreground" Value="#FFFFFF"/>
-                            </Trigger>
-                            <MultiTrigger>
-                                <MultiTrigger.Conditions>
-                                    <Condition Property="IsSelected" Value="True"/>
-                                    <Condition Property="IsMouseOver" Value="True"/>
-                                </MultiTrigger.Conditions>
-                                <Setter Property="Background" Value="#106EBE"/>
-                                <Setter Property="Foreground" Value="#FFFFFF"/>
-                            </MultiTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Setter.Value>
-            </Setter>
+            <Setter Property="Margin" Value="0,4,0,4"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Style.Triggers>
                 <Trigger Property="IsEnabled" Value="False">
                     <Setter Property="Foreground" Value="#707070"/>
-                    <Setter Property="Background" Value="#252526"/>
-                    <Setter Property="BorderBrush" Value="#333337"/>
-                    <Setter Property="Opacity" Value="1"/>
+                    <Setter Property="Opacity" Value="0.65"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -74,96 +48,139 @@
     <Grid Margin="28">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>  <!-- 0: Main title -->
-            <RowDefinition Height="Auto"/>  <!-- 1: Claude section title -->
-            <RowDefinition Height="Auto"/>  <!-- 2: Claude description -->
-            <RowDefinition Height="Auto"/>  <!-- 3: Claude key box -->
-            <RowDefinition Height="Auto"/>  <!-- 4: Claude model combo -->
-            <RowDefinition Height="Auto"/>  <!-- 5: Separator -->
-            <RowDefinition Height="Auto"/>  <!-- 6: Gemini section title -->
-            <RowDefinition Height="Auto"/>  <!-- 7: Gemini description -->
-            <RowDefinition Height="Auto"/>  <!-- 8: Gemini key box -->
-            <RowDefinition Height="Auto"/>  <!-- 9: Gemini model combo -->
-            <RowDefinition Height="*"/>     <!-- 10: Error / spacer -->
-            <RowDefinition Height="Auto"/>  <!-- 11: Buttons -->
+            <RowDefinition Height="Auto"/>  <!-- 1: Anthropic section -->
+            <RowDefinition Height="Auto"/>  <!-- 2: OpenAI section -->
+            <RowDefinition Height="Auto"/>  <!-- 3: Gemini section -->
+            <RowDefinition Height="Auto"/>  <!-- 4: Separator -->
+            <RowDefinition Height="Auto"/>  <!-- 5: Active model section -->
+            <RowDefinition Height="*"/>     <!-- 6: Error / spacer -->
+            <RowDefinition Height="Auto"/>  <!-- 7: Buttons -->
         </Grid.RowDefinitions>
 
-        <!-- Main title -->
-        <TextBlock Grid.Row="0" Text="API Keys &amp; Models"
-                   Foreground="#E1E1E1" FontSize="16" FontWeight="Bold"
-                   FontFamily="Pretendard, Malgun Gothic, Segoe UI"
-                   Margin="0,0,0,18"/>
-
-        <!-- ── Claude ─────────────────────────────── -->
-        <TextBlock Grid.Row="1" Text="Anthropic Claude" Style="{StaticResource SectionTitle}"/>
-
-        <TextBlock Grid.Row="2" Style="{StaticResource DescText}">
-            Required · <Hyperlink NavigateUri="https://console.anthropic.com/" RequestNavigate="Hyperlink_RequestNavigate">
-                <Run Text="console.anthropic.com" Foreground="#4EA8DE"/>
-            </Hyperlink>
-        </TextBlock>
-
-        <PasswordBox x:Name="ApiKeyBox" Grid.Row="3"
-                     Background="#2D2D30" Foreground="#E1E1E1" CaretBrush="#E1E1E1"
-                     BorderBrush="#3E3E42" BorderThickness="1"
-                     Padding="10,8" FontSize="13" Margin="0,0,0,8"
-                     PasswordChanged="ClaudeKey_Changed"/>
-
-        <ComboBox x:Name="ClaudeModelCombo" Grid.Row="4"
-                  Style="{StaticResource DarkCombo}"
-                  IsEnabled="False">
-            <ComboBoxItem Tag="claude-sonnet-4-6"
-                          Content="claude-sonnet-4-6  —  Best balance  ★ Recommended"
-                          IsSelected="True"/>
-            <ComboBoxItem Tag="claude-opus-4-7"
-                          Content="claude-opus-4-7  —  Most capable (Apr 2026)"/>
-            <ComboBoxItem Tag="claude-haiku-4-5"
-                          Content="claude-haiku-4-5  —  Fastest &amp; cheapest"/>
-        </ComboBox>
-
-        <!-- Separator -->
-        <Separator Grid.Row="5" Background="#3E3E42" Margin="0,16,0,16"/>
-
-        <!-- ── Gemini (RAG — coming soon) ──────────── -->
-        <DockPanel Grid.Row="6" Margin="0,0,0,5" Opacity="0.45">
-            <TextBlock Text="Google Gemini" Style="{StaticResource SectionTitle}" Margin="0" VerticalAlignment="Center"/>
-            <TextBlock Text="Coming soon" Foreground="#888888" FontSize="11"
+        <!-- Main title + Guide link -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,18">
+            <TextBlock x:Name="MainTitleText"
+                       Foreground="#E1E1E1" FontSize="16" FontWeight="Bold"
                        FontFamily="Pretendard, Malgun Gothic, Segoe UI"
-                       Margin="8,0,0,0" VerticalAlignment="Center"/>
+                       VerticalAlignment="Center"/>
+            <Button x:Name="GuideButton" Click="GuideButton_Click"
+                    DockPanel.Dock="Right" HorizontalAlignment="Right"
+                    Padding="10,4" Cursor="Hand"
+                    Background="#2D2D30" Foreground="#4EA8DE"
+                    BorderBrush="#4EA8DE" BorderThickness="1"
+                    FontSize="11" FontWeight="SemiBold"
+                    FontFamily="Pretendard, Malgun Gothic, Segoe UI"/>
         </DockPanel>
 
-        <TextBlock Grid.Row="7" Style="{StaticResource DescText}" Opacity="0.55" TextWrapping="Wrap">
-            RAG (Revit API docs lookup) is temporarily disabled while the store access is being reworked for the OSS release. Code generation works normally without it. Update coming soon.
-        </TextBlock>
+        <!-- ── Anthropic ─────────────────────────────── -->
+        <StackPanel Grid.Row="1" Margin="0,0,0,16">
+            <DockPanel Margin="0,0,0,2">
+                <TextBlock x:Name="AnthropicSectionTitle" Style="{StaticResource SectionTitle}" Margin="0" VerticalAlignment="Center"/>
+                <TextBlock x:Name="AnthropicStatusBadge" Text="" Margin="8,0,0,0" VerticalAlignment="Center"
+                           Foreground="#5CAF5C" FontSize="11"
+                           FontFamily="Pretendard, Malgun Gothic, Segoe UI"/>
+            </DockPanel>
+            <TextBlock Style="{StaticResource DescText}">
+                <Run x:Name="AnthropicDescPrefix"/><Run Text=" · "/><Hyperlink NavigateUri="https://console.anthropic.com/" RequestNavigate="Hyperlink_RequestNavigate">
+                    <Run Text="console.anthropic.com" Foreground="#4EA8DE"/>
+                </Hyperlink>
+            </TextBlock>
+            <PasswordBox x:Name="AnthropicKeyBox" Style="{StaticResource DarkPasswordBox}"
+                         PasswordChanged="AnthropicKey_Changed"/>
+        </StackPanel>
 
-        <PasswordBox x:Name="GeminiApiKeyBox" Grid.Row="8"
-                     Background="#2D2D30" Foreground="#E1E1E1" CaretBrush="#E1E1E1"
-                     BorderBrush="#3E3E42" BorderThickness="1"
-                     Padding="10,8" FontSize="13" Margin="0,0,0,8"
-                     IsEnabled="False" Opacity="0.45"/>
+        <!-- ── OpenAI ────────────────────────────────── -->
+        <StackPanel Grid.Row="2" Margin="0,0,0,16">
+            <DockPanel Margin="0,0,0,2">
+                <TextBlock x:Name="OpenAISectionTitle" Style="{StaticResource SectionTitle}" Margin="0" VerticalAlignment="Center"/>
+                <TextBlock x:Name="OpenAIStatusBadge" Text="" Margin="8,0,0,0" VerticalAlignment="Center"
+                           Foreground="#5CAF5C" FontSize="11"
+                           FontFamily="Pretendard, Malgun Gothic, Segoe UI"/>
+            </DockPanel>
+            <TextBlock Style="{StaticResource DescText}">
+                <Run x:Name="OpenAIDescPrefix"/><Run Text=" · "/><Hyperlink NavigateUri="https://platform.openai.com/api-keys" RequestNavigate="Hyperlink_RequestNavigate">
+                    <Run Text="platform.openai.com/api-keys" Foreground="#4EA8DE"/>
+                </Hyperlink>
+            </TextBlock>
+            <PasswordBox x:Name="OpenAIKeyBox" Style="{StaticResource DarkPasswordBox}"
+                         PasswordChanged="OpenAIKey_Changed"/>
+        </StackPanel>
 
-        <ComboBox x:Name="GeminiModelCombo" Grid.Row="9"
-                  Style="{StaticResource DarkCombo}"
-                  IsEnabled="False" Opacity="0.45">
-            <ComboBoxItem Tag="gemini-2.5-flash-lite"
-                          Content="gemini-2.5-flash-lite  —  Fast &amp; cheap  ★ Recommended"
-                          IsSelected="True"/>
-            <ComboBoxItem Tag="gemini-2.5-pro"
-                          Content="gemini-2.5-pro  —  Best RAG quality"/>
-            <ComboBoxItem Tag="gemini-3.1-pro-preview"
-                          Content="gemini-3.1-pro-preview  —  Latest (preview)"/>
-        </ComboBox>
+        <!-- ── Gemini ────────────────────────────────── -->
+        <StackPanel Grid.Row="3" Margin="0,0,0,16">
+            <DockPanel Margin="0,0,0,2">
+                <TextBlock x:Name="GeminiSectionTitle" Style="{StaticResource SectionTitle}" Margin="0" VerticalAlignment="Center"/>
+                <TextBlock x:Name="GeminiStatusBadge" Text="" Margin="8,0,0,0" VerticalAlignment="Center"
+                           Foreground="#5CAF5C" FontSize="11"
+                           FontFamily="Pretendard, Malgun Gothic, Segoe UI"/>
+            </DockPanel>
+            <TextBlock Style="{StaticResource DescText}">
+                <Run x:Name="GeminiDescPrefix"/><Run Text=" · "/><Hyperlink NavigateUri="https://aistudio.google.com/apikey" RequestNavigate="Hyperlink_RequestNavigate">
+                    <Run Text="aistudio.google.com/apikey" Foreground="#4EA8DE"/>
+                </Hyperlink>
+            </TextBlock>
+            <PasswordBox x:Name="GeminiKeyBox" Style="{StaticResource DarkPasswordBox}"
+                         PasswordChanged="GeminiKey_Changed"/>
+        </StackPanel>
+
+        <!-- Separator -->
+        <Separator Grid.Row="4" Background="#3E3E42" Margin="0,0,0,16"/>
+
+        <!-- ── Active Model ─────────────────────────── -->
+        <StackPanel Grid.Row="5">
+            <TextBlock x:Name="ActiveModelTitle" Style="{StaticResource SectionTitle}"/>
+            <TextBlock x:Name="ActiveModelDesc" Style="{StaticResource DescText}"/>
+
+            <RadioButton x:Name="ModelSonnet46" Style="{StaticResource ModelRadio}"
+                         GroupName="ActiveModel" Tag="claude-sonnet-4-6"
+                         IsChecked="True"
+                         ToolTip="Response speed: fast">
+                <TextBlock>
+                    <Run Text="Claude Sonnet 4.6" FontWeight="SemiBold"/>
+                    <Run Text=" ⚡⚡⚡" Foreground="#FFD24D" FontSize="11"/>
+                    <Run x:Name="ModelNoteSonnet46" Foreground="#AAAAAA"/>
+                </TextBlock>
+            </RadioButton>
+            <RadioButton x:Name="ModelOpus47" Style="{StaticResource ModelRadio}"
+                         GroupName="ActiveModel" Tag="claude-opus-4-7"
+                         ToolTip="Response speed: medium">
+                <TextBlock>
+                    <Run Text="Claude Opus 4.7" FontWeight="SemiBold"/>
+                    <Run Text=" ⚡⚡" Foreground="#FFD24D" FontSize="11"/>
+                    <Run x:Name="ModelNoteOpus47" Foreground="#AAAAAA"/>
+                </TextBlock>
+            </RadioButton>
+            <RadioButton x:Name="ModelGpt55" Style="{StaticResource ModelRadio}"
+                         GroupName="ActiveModel" Tag="gpt-5.5"
+                         ToolTip="Response speed: medium">
+                <TextBlock>
+                    <Run Text="GPT-5.5" FontWeight="SemiBold"/>
+                    <Run Text=" ⚡⚡" Foreground="#FFD24D" FontSize="11"/>
+                    <Run x:Name="ModelNoteGpt55" Foreground="#AAAAAA"/>
+                </TextBlock>
+            </RadioButton>
+            <RadioButton x:Name="ModelGemini31" Style="{StaticResource ModelRadio}"
+                         GroupName="ActiveModel" Tag="gemini-3.1-pro-preview"
+                         ToolTip="Response speed: slow (deeper reasoning may take longer)">
+                <TextBlock>
+                    <Run Text="Gemini 3.1 Pro" FontWeight="SemiBold"/>
+                    <Run Text=" ⚡" Foreground="#FFD24D" FontSize="11"/>
+                    <Run x:Name="ModelNoteGemini31" Foreground="#AAAAAA"/>
+                </TextBlock>
+            </RadioButton>
+        </StackPanel>
 
         <!-- Error -->
-        <TextBlock x:Name="ErrorText" Grid.Row="10" Foreground="#FF6B6B"
-                   FontSize="12" Margin="0,8,0,0" Visibility="Collapsed"
+        <TextBlock x:Name="ErrorText" Grid.Row="6" Foreground="#FF6B6B"
+                   FontSize="12" Margin="0,12,0,0" Visibility="Collapsed"
                    TextWrapping="Wrap" VerticalAlignment="Top"/>
 
         <!-- Buttons -->
-        <StackPanel Grid.Row="11" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button x:Name="CancelButton" Content="Cancel" Width="80" Height="32"
+        <StackPanel Grid.Row="7" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button x:Name="CancelButton" Width="80" Height="32"
                     Margin="0,0,8,0" Click="CancelButton_Click"
                     Background="#3E3E42" Foreground="#E1E1E1" BorderThickness="0" Cursor="Hand"/>
-            <Button x:Name="SaveButton" Content="Save" Width="80" Height="32"
+            <Button x:Name="SaveButton" Width="80" Height="32"
                     Click="SaveButton_Click"
                     Background="#0078D4" Foreground="White" BorderThickness="0" Cursor="Hand"/>
         </StackPanel>
